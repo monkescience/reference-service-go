@@ -8,6 +8,6 @@
     ":pinDevDependencies",
     ":approveMajorUpdates",
     ":automergeMinor",
-    ":conventionalCommits"
+    ":semanticCommits"
   ]
 }
