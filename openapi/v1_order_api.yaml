@@ -1,0 +1,165 @@
+openapi: "3.1.1"
+info:
+  version: 0.1.2
+  title: Order API
+
+servers:
+  - url: https://api.example.com/v1
+    description: Production
+  - url: https://staging.api.example.com/v1
+    description: Staging
+
+paths:
+  /orders:
+    get:
+      operationId: get_orders
+      summary: Get all orders
+      parameters:
+        - name: customer_id
+          in: query
+          required: false
+          description: The customer id determines the customer of orders returned
+          schema:
+            type: string
+            format: uuid
+            examples:
+             - 6af7fd58-c92e-4b26-9eb7-1942f6ea9aee
+             - 3f89c3b3-6c33-4ed1-b8ec-7556c30cfca5
+        - name: limit
+          in: query
+          required: false
+          description: The limit determines the number of orders returned
+          schema:
+            type: integer
+            default: 50
+        - name: offset
+          in: query
+          required: false
+          description: The offset determines the skipped orders
+          schema:
+            type: integer
+            default: 0
+      responses:
+        "200":
+          description: An array of orders
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/orders_response"
+    post:
+      operationId: post_orders
+      summary: Place a new order
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/order_request"
+      responses:
+        "201":
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/order_response"
+  /orders/{order_id}:
+    get:
+      operationId: get_order
+      summary: Get information about a specific order
+      parameters:
+        - name: order_id
+          in: path
+          required: true
+          description: The id of the order to retrieve
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Information about a single order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/order_response"
+components:
+  schemas:
+    order_request:
+      type: object
+      required:
+        - customer_id
+        - items
+      properties:
+        customer_id:
+          type: string
+          format: uuid
+          examples:
+            - 6af7fd58-c92e-4b26-9eb7-1942f6ea9aee
+            - da4c89f5-fe2e-4cbe-a2fa-6426be97546e
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/order_item_request"
+    order_item_request:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          examples:
+            - marshmallow
+            - banana
+            - apple
+    order_response:
+      type: object
+      required:
+        - customer_id
+        - order_id
+        - creation_date
+        - status
+        - items
+      properties:
+        customer_id:
+          type: string
+          format: uuid
+          examples:
+            - f8f3d5ce-3fc1-4d9d-9306-f5165b9279cc
+            - 97c44561-8e9f-426a-a640-9d682198e1cb
+        order_id:
+          type: string
+          examples:
+            - 01J71WT3T81XK-NONE-X7Y3DD7FGWV0F
+            - 01J71WXMDHMWH-NONE-PVHE8560H324S
+            - 01J71WYVYCDDA-NONE-44EJWDYHQHCHZ
+        creation_date:
+          type: string
+          format: date-time
+          examples:
+            - "2023-10-01T12:00:00Z"
+            - "2023-10-02T15:30:00Z"
+        status:
+          $ref: "#/components/schemas/order_status"
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/order_item_response"
+    order_status:
+      type: string
+      examples:
+        - order_completed
+        - order_canceled
+        - order_in_progress
+        - order_placed
+    orders_response:
+      type: array
+      items:
+        $ref: "#/components/schemas/order_response"
+    order_item_response:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          examples:
+            - banana
+            - apple
+            - marshmallow

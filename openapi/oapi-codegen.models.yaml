@@ -1,0 +1,4 @@
+package: order
+generate:
+  models: true
+output: incoming/order/models.gen.go

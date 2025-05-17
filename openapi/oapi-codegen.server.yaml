@@ -1,0 +1,5 @@
+package: order
+generate:
+  chi-server: true
+  embedded-spec: true
+output: incoming/order/server.gen.go
