@@ -85,7 +85,7 @@ jobs:
         id: generate-token
         uses: actions/create-github-app-token@v2
         with:
-          app-id: ${{ secrets.GITOPS_APP_ID }}
+          app-id: ${{ vars.GITOPS_APP_ID }}
           private-key: ${{ secrets.GITOPS_APP_PRIVATE_KEY }}
           owner: monkescience
           repositories: gitops
@@ -104,12 +104,9 @@ jobs:
           mkdir -p "gitops/manifests/${{ env.GITHUB_REPOSITORY }}/${{ env.ENVIRONMENT }}"
           cp "manifests/${{ env.ENVIRONMENT }}/manifest.yaml" "gitops/manifests/${{ env.GITHUB_REPOSITORY }}/${{ env.ENVIRONMENT }}/"
           cd gitops
-          
-          git config user.name "${{ env.GITHUB_BOT_USER_NAME }}"
-          git config user.email "${{ env.GITHUB_BOT_USER_EMAIL }}"
-          
+
           git add "manifests/${{ env.GITHUB_REPOSITORY }}/${{ env.ENVIRONMENT }}/manifest.yaml"
-          
+
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
