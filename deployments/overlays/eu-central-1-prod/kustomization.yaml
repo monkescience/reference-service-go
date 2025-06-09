@@ -3,10 +3,10 @@ kind: Kustomization
 
 resources:
   - ../../base
-  - deployment-patch.yaml
-  - hpa-patch.yaml
 
-namespace: reference-service-prod
+patches:
+  - path: deployment-patch.yaml
+  - path: hpa-patch.yaml
 
 metadata:
   labels:
