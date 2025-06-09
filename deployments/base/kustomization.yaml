@@ -6,10 +6,13 @@ resources:
   - deployment.yaml
   - service.yaml
   - hpa.yaml
+  - pdb.yaml
 
+namespace: reference-service-go
 
 labels:
-  - pairs:
+  - includeSelectors: true
+    pairs:
       app.kubernetes.io/name: reference-service-go
       app.kubernetes.io/managed-by: kustomize
       # kustomize edit set label app.kubernetes.io/version=20250609-g7f8e3c1

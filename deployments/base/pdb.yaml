@@ -1,0 +1,9 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: reference-service-go
+spec:
+  minAvailable: 75%
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: reference-service-go
