@@ -12,8 +12,3 @@ metadata:
   labels:
     env: dev
     region: eu-central-1
-
-images:
-  - name: ghcr.io/monkescience/reference-service-go
-    # kustomize edit set image ghcr.io/monkescience/reference-service-go:20250609-g7f8e3c1
-    newTag: placeholder

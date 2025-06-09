@@ -11,11 +11,11 @@ spec:
       maxSurge: 25%
   selector:
     matchLabels:
-      app: reference-service-go
+      app.kubernetes.io/name: reference-service-go
   template:
     metadata:
       labels:
-        app: reference-service-go
+        app.kubernetes.io/name: reference-service-go
     spec:
       securityContext:
         runAsNonRoot: true

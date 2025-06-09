@@ -7,6 +7,15 @@ resources:
   - service.yaml
   - hpa.yaml
 
-metadata:
-  labels:
-    app: reference-service-go
+
+labels:
+  - pairs:
+      app.kubernetes.io/name: reference-service-go
+      app.kubernetes.io/managed-by: kustomize
+      # kustomize edit set label app.kubernetes.io/version=20250609-g7f8e3c1
+      app.kubernetes.io/version: PLACEHOLDER
+
+images:
+  - name: ghcr.io/monkescience/reference-service-go
+    # kustomize edit set image ghcr.io/monkescience/reference-service-go:20250609-g7f8e3c1
+    newTag: PLACEHOLDER

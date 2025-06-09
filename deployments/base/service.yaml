@@ -9,5 +9,5 @@ spec:
     protocol: TCP
     name: http
   selector:
-    app: reference-service-go
+    app.kubernetes.io/name: reference-service-go
   type: ClusterIP

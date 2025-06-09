@@ -71,10 +71,12 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Update kustomization with new image tag
+      - name: Update kustomization with new image tag and version
         run: |
+          # Update image tag in overlay
           cd "deployments/overlays/${{ env.ENVIRONMENT }}"
           kustomize edit set image "ghcr.io/monkescience/${{ env.GITHUB_REPOSITORY }}:${{ env.VERSION }}"
+          kustomize edit set label "app.kubernetes.io/version:${{ env.VERSION }}"
 
       - name: Generate deployment manifests
         run: |
