@@ -11,7 +11,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   ENVIRONMENT: eu-central-1-dev
   GITHUB_REPOSITORY: ${{ github.event.repository.name }}
-  KUSTOMIZE_VERSION: 5.6.0
+  KUSTOMIZE_VERSION: v5.6.0
 
 jobs:
   build-and-sync:
@@ -37,8 +37,8 @@ jobs:
 
       - name: Set up Kustomize
         run: |
-          curl -sLo kustomize https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/${{ env.KUSTOMIZE_VERSION }}/kustomize_${{ env.KUSTOMIZE_VERSION }}_linux_amd64
-          chmod +x kustomize
+          curl -sLo kustomize.tar.gz https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/${{ env.KUSTOMIZE_VERSION }}/kustomize_${{ env.KUSTOMIZE_VERSION }}_linux_amd64.tar.gz
+          ar -xzf kustomize.tar.gz
           sudo mv kustomize /usr/local/bin/
           kustomize version
 
