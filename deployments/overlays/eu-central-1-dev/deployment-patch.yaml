@@ -1,0 +1,15 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: reference-service-go
+spec:
+  replicas: 2
+  template:
+    spec:
+      containers:
+      - name: reference-service-go
+        env:
+        - name: ENVIRONMENT
+          value: "dev"
+        - name: REGION
+          value: "eu-central-1"

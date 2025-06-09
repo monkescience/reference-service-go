@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: reference-service-go
+spec:
+  ports:
+  - port: 80
+    targetPort: http
+    protocol: TCP
+    name: http
+  selector:
+    app: reference-service-go
+  type: ClusterIP
