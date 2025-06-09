@@ -37,8 +37,8 @@ jobs:
 
       - name: Set up Kustomize
         run: |
-          curl -sLo kustomize.tar.gz https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/${{ env.KUSTOMIZE_VERSION }}/kustomize_${{ env.KUSTOMIZE_VERSION }}_linux_amd64.tar.gz
-          tar -xzf kustomize.tar.gz
+          curl -sLo kustomize https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/${{ env.KUSTOMIZE_VERSION }}/kustomize_${{ env.KUSTOMIZE_VERSION }}_linux_amd64
+          chmod +x kustomize
           sudo mv kustomize /usr/local/bin/
           kustomize version
 
