@@ -11,7 +11,7 @@ resources:
 namespace: reference-service-go
 
 labels:
-  - includeSelectors: true
+  - includeSelectors: false
     pairs:
       app.kubernetes.io/name: reference-service-go
       app.kubernetes.io/managed-by: kustomize
