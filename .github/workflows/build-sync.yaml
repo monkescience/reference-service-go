@@ -1,9 +1,9 @@
 name: Build Docker Image and Sync GitOps
 
 on:
-#  push:
-#    branches:
-#      - main
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 env:
