@@ -76,7 +76,7 @@ jobs:
           # Update image tag in overlay
           cd "deployments/overlays/${{ env.ENVIRONMENT }}"
           kustomize edit set image "ghcr.io/monkescience/${{ env.GITHUB_REPOSITORY }}:${{ env.VERSION }}"
-          kustomize edit set label "app.kubernetes.io/version:${{ env.VERSION }}"
+          kustomize edit add label "app.kubernetes.io/version:${{ env.VERSION }}" --without-selector --force
 
       - name: Generate deployment manifests
         run: |

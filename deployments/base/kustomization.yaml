@@ -10,11 +10,13 @@ resources:
 namespace: reference-service-go
 
 labels:
-  - includeSelectors: false
+  - includeSelectors: true
     pairs:
       app.kubernetes.io/name: reference-service-go
+  - includeSelectors: false
+    pairs:
       app.kubernetes.io/managed-by: kustomize
-      # kustomize edit set label app.kubernetes.io/version=20250609-g7f8e3c1
+      # kustomize edit add label app.kubernetes.io/version:20250609-g7f8e3c1 --without-selector --force
       app.kubernetes.io/version: PLACEHOLDER
 
 images:
