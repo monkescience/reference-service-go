@@ -23,6 +23,14 @@ jobs:
       sha: ${{ steps.release.outputs.sha }}
       version: ${{ steps.release.outputs.version }}
     steps:
+      - name: Generate GitHub App token
+        id: generate-token
+        uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2
+        with:
+          app-id: ${{ vars.RELEASE_PLEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_PLEASE_APP_PRIVATE_KEY }}
+          owner: monkescience
+
       - name: Run release-please
         id: release
         uses: googleapis/release-please-action@v4
@@ -31,6 +39,7 @@ jobs:
           github-graphql-url: ${{ github.graphql_url }}
           config-file: .release-please-config.json
           manifest-file: .release-please-manifest.json
+          token: ${{ steps.generate-token.outputs.token }}
 
   build:
     needs: release-please
