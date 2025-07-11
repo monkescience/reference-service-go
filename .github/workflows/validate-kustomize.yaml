@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - main
+  workflow_dispatch: 
 
 env:
   KUSTOMIZE_VERSION: v5.6.0 # renovate: datasource=github-releases depName=kubernetes-sigs/kustomize
