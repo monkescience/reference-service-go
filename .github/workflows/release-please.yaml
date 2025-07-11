@@ -1,59 +1,51 @@
-name: Build Docker Image and Sync GitOps (Development)
+name: Release Please
 
 on:
   push:
     branches:
-      - '**'
-      - '!main'  # Exclude main branch - handled by release-please
-  pull_request:
-    branches:
       - main
   workflow_dispatch:
 
+permissions:
+  id-token: write
+  contents: write
+  pull-requests: write
+
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository }}
-  ENVIRONMENT: eu-central-1-dev
-  GITHUB_REPOSITORY: ${{ github.event.repository.name }}
-  KUSTOMIZE_VERSION: v5.6.0
+  KUSTOMIZE_VERSION: v5.6.0 # renovate: datasource=github-releases depName=kubernetes-sigs/kustomize
 
 jobs:
-  build-and-sync:
+  release-please:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      packages: write
-      id-token: write
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+      sha: ${{ steps.release.outputs.sha }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - name: Run release-please
+        id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          github-api-url: ${{ github.api_url }}
+          github-graphql-url: ${{ github.graphql_url }}
+          config-file: .release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  build:
+    needs: release-please
+    if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: ubuntu-latest
+
+    env:
+      IMAGE_NAME: ${{ github.repository }}
+      GITHUB_REPOSITORY: ${{ github.event.repository.name }}
+      VERSION: ${{ needs.release-please.outputs.version }}
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-
-      - name: Generate version
-        id: version
-        run: |
-          DATE=$(date +'%Y%m%d')
-          SHORT_SHA=$(git rev-parse --short HEAD)
-          VERSION="${DATE}-${SHORT_SHA}"
-          echo "VERSION=${VERSION}" >> $GITHUB_ENV
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          echo "Generated version: ${VERSION}"
-
-      - name: Set up Kustomize
-        run: |
-          curl -sLo kustomize.tar.gz https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/${{ env.KUSTOMIZE_VERSION }}/kustomize_${{ env.KUSTOMIZE_VERSION }}_linux_amd64.tar.gz
-          tar -xzf kustomize.tar.gz
-          sudo mv kustomize /usr/local/bin/
-          kustomize version
-
-      - name: Validate kustomize build
-        run: |
-          # Validate that kustomize build works without changing the image tag
-          if ! kustomize build "deployments/overlays/${{ env.ENVIRONMENT }}" > /dev/null; then
-            echo "❌ Kustomize validation failed"
-            exit 1
-          fi
-          echo "✅ Kustomize validation successful"
+        uses: actions/checkout@v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3
@@ -75,6 +67,28 @@ jobs:
             VERSION=${{ env.VERSION }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  deploy:
+    needs: [release-please, build]
+    if: ${{ needs.release-please.outputs.release_created }}
+    runs-on: ubuntu-latest
+
+    env:
+      IMAGE_NAME: ${{ github.repository }}
+      ENVIRONMENT: eu-central-1-dev
+      GITHUB_REPOSITORY: ${{ github.event.repository.name }}
+      VERSION: ${{ needs.release-please.outputs.version }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Kustomize
+        run: |
+          curl -sLo kustomize.tar.gz https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize/${{ env.KUSTOMIZE_VERSION }}/kustomize_${{ env.KUSTOMIZE_VERSION }}_linux_amd64.tar.gz
+          tar -xzf kustomize.tar.gz
+          sudo mv kustomize /usr/local/bin/
+          kustomize version
 
       - name: Update kustomization with new image tag and version
         run: |
