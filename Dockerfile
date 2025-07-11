@@ -1,6 +1,10 @@
 ARG VERSION
 
-FROM golang:1.24.5-alpine@sha256:ddf52008bce1be455fe2b22d780b6693259aaf97b16383b6372f4b22dd33ad66 AS builder
+FROM --platform=$BUILDPLATFORM golang:1.24.5-alpine@sha256:ddf52008bce1be455fe2b22d780b6693259aaf97b16383b6372f4b22dd33ad66 AS builder
+ARG BUILDPLATFORM
+ARG TARGETPLATFORM
+ARG TARGETOS
+ARG TARGETARCH
 ARG GO_BUILD_ARGS=""
 
 WORKDIR /build
@@ -9,7 +13,7 @@ RUN go mod download
 
 COPY ./cmd ./cmd
 COPY ./internal ./internal
-RUN go build ${GO_BUILD_ARGS} -o service ./cmd/main.go
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build ${GO_BUILD_ARGS} -o service ./cmd/main.go
 
 FROM alpine:3.22@sha256:8a1f59ffb675680d47db6337b49d22281a139e9d709335b492be023728e11715
 WORKDIR /service
