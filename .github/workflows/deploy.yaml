@@ -9,6 +9,10 @@ on:
         description: 'Environment to deploy to'
         required: true
         type: string
+    secrets:
+      gitops_app_private_key:
+        description: 'Private key for GitOps app'
+        required: true
 
 permissions:
   id-token: write
@@ -56,7 +60,7 @@ jobs:
         uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2
         with:
           app-id: ${{ vars.GITOPS_APP_ID }}
-          private-key: ${{ secrets.GITOPS_APP_PRIVATE_KEY }}
+          private-key: ${{ secrets.gitops_app_private_key }}
           owner: monkescience
           repositories: gitops
 

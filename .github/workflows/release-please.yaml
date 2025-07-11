@@ -78,9 +78,11 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy:
-    needs: [release-please, build]
+    needs: [ release-please, build ]
     if: ${{ needs.release-please.outputs.release_created }}
     uses: ./.github/workflows/deploy.yaml
     with:
       version: ${{ needs.release-please.outputs.version }}
       environment: eu-central-1-dev
+    secrets:
+      gitops_app_private_key: ${{ secrets.GITOPS_APP_PRIVATE_KEY }}
