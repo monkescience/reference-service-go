@@ -15,3 +15,5 @@ jobs:
     with:
       version: ${{ github.event.client_payload.version || github.ref_name }}
       environment: eu-central-1-prod
+    secrets:
+      gitops_app_private_key: ${{ secrets.GITOPS_APP_PRIVATE_KEY }}
