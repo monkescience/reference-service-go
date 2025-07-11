@@ -34,7 +34,7 @@ jobs:
 
       - name: Run release-please
         id: release
-        uses: googleapis/release-please-action@v4
+        uses: googleapis/release-please-action@a02a34c4d625f9be7cb89156071d8567266a2445 # v4
         with:
           github-api-url: ${{ github.api_url }}
           github-graphql-url: ${{ github.graphql_url }}
@@ -54,7 +54,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3
