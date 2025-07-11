@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.0](https://github.com/monkescience/reference-service-go/compare/0.4.0...0.5.0) (2025-07-11)
+
+
+### Features
+
+* **ci:** add secrets for GitOps app private key in eu-central-1-prod deployment ([841a47b](https://github.com/monkescience/reference-service-go/commit/841a47b3515c3e00ecf0d89f0164c4e64bd2464f))
+* **ci:** add support for GitOps app private key in workflows ([aa6d615](https://github.com/monkescience/reference-service-go/commit/aa6d615ff8a199b9a92aab23876be834c3c8237e))
+
 ## [0.4.0](https://github.com/monkescience/reference-service-go/compare/0.3.0...0.4.0) (2025-07-11)
 
 
