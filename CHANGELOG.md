@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.5.1](https://github.com/monkescience/reference-service-go/compare/0.5.0...0.5.1) (2025-07-19)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/oapi-codegen/oapi-codegen/v2 to v2.5.0 ([#23](https://github.com/monkescience/reference-service-go/issues/23)) ([1c84735](https://github.com/monkescience/reference-service-go/commit/1c84735ba7a65717b1f04edbef3db208c8e05e78))
+* **deps:** update module github.com/oapi-codegen/runtime to v1.1.2 ([#22](https://github.com/monkescience/reference-service-go/issues/22)) ([69f0efa](https://github.com/monkescience/reference-service-go/commit/69f0efaaea9dba08661de8077083c691c5854eaf))
+
 ## [0.5.0](https://github.com/monkescience/reference-service-go/compare/0.4.0...0.5.0) (2025-07-11)
 
 
