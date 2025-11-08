@@ -14,8 +14,8 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
-  GITHUB_REPOSITORY: ${{ github.repository }}
   HELM_CHART_NAME: reference-service-go
+  HELM_REPOSITORY: monkescience/helm-charts
   HELM_VERSION: v3.19.0 # renovate: datasource=github-releases depName=helm/helm
 
 jobs:
@@ -105,4 +105,4 @@ jobs:
       - name: Push Helm chart to GHCR (OCI)
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | helm registry login ghcr.io --username ${{ github.actor }} --password-stdin
-          helm push ${{ env.HELM_CHART_NAME }}-${{ env.VERSION}}.tgz oci://ghcr.io/${{ env.GITHUB_REPOSITORY }}
+          helm push ${{ env.HELM_CHART_NAME }}-${{ env.VERSION}}.tgz oci://ghcr.io/${{ env.HELM_REPOSITORY }}
