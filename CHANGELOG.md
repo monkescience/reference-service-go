@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.5.1](https://github.com/monkescience/reference-service-go/compare/0.5.0...0.5.1) (2025-11-08)
+
+
+### Bug Fixes
+
+* **deps:** update module github.com/getkin/kin-openapi to v0.133.0 ([#33](https://github.com/monkescience/reference-service-go/issues/33)) ([7750519](https://github.com/monkescience/reference-service-go/commit/7750519e5ef468b5b641ed1a38d6cc6c2466fbdf))
+* **deps:** update module github.com/go-chi/chi/v5 to v5.2.3 ([#32](https://github.com/monkescience/reference-service-go/issues/32)) ([21fa9d3](https://github.com/monkescience/reference-service-go/commit/21fa9d3e95c3c2e0d45f120244bc0eb430273ac2))
+* **deps:** update module github.com/oapi-codegen/oapi-codegen/v2 to v2.5.0 ([#23](https://github.com/monkescience/reference-service-go/issues/23)) ([1c84735](https://github.com/monkescience/reference-service-go/commit/1c84735ba7a65717b1f04edbef3db208c8e05e78))
+* **deps:** update module github.com/oapi-codegen/oapi-codegen/v2 to v2.5.1 ([#47](https://github.com/monkescience/reference-service-go/issues/47)) ([4fa4268](https://github.com/monkescience/reference-service-go/commit/4fa42684b29b2299a1ae2b0fac32b56796369adb))
+* **deps:** update module github.com/oapi-codegen/runtime to v1.1.2 ([#22](https://github.com/monkescience/reference-service-go/issues/22)) ([69f0efa](https://github.com/monkescience/reference-service-go/commit/69f0efaaea9dba08661de8077083c691c5854eaf))
+* **deps:** update module github.com/prometheus/client_golang to v1.23.0 ([#25](https://github.com/monkescience/reference-service-go/issues/25)) ([e89651e](https://github.com/monkescience/reference-service-go/commit/e89651e4de6a64298b4442033e10d9864a641ba3))
+* **deps:** update module github.com/prometheus/client_golang to v1.23.1 ([#35](https://github.com/monkescience/reference-service-go/issues/35)) ([19a9f67](https://github.com/monkescience/reference-service-go/commit/19a9f677f9d709d55fedd22e1292e6ae01e5f852))
+* **deps:** update module github.com/prometheus/client_golang to v1.23.2 ([#37](https://github.com/monkescience/reference-service-go/issues/37)) ([8725711](https://github.com/monkescience/reference-service-go/commit/8725711419e02e4904d45894156961f2a0fdfc08))
+
 ## [0.5.0](https://github.com/monkescience/reference-service-go/compare/0.4.0...0.5.0) (2025-07-11)
 
 
