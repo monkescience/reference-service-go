@@ -1,0 +1,19 @@
+name: reference-service-go
+
+replicaCount: 1
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 128Mi
+  limits:
+    memory: 128Mi
+
+autoscaling:
+  minReplicas: 1
+  maxReplicas: 3
+
+env:
+  region: ""
+  environment: ""
+

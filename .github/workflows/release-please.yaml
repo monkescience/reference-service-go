@@ -14,6 +14,9 @@ permissions:
 
 env:
   REGISTRY: ghcr.io
+  GITHUB_REPOSITORY: ${{ github.repository }}
+  HELM_CHART_NAME: reference-service-go
+  HELM_VERSION: v3.19.0 # renovate: datasource=github-releases depName=helm/helm
 
 jobs:
   release-please:
@@ -77,12 +80,29 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  deploy:
+  publish:
     needs: [ release-please, build ]
     if: ${{ needs.release-please.outputs.release_created }}
-    uses: ./.github/workflows/deploy.yaml
-    with:
-      version: ${{ needs.release-please.outputs.version }}
-      environment: eu-central-1-dev
-    secrets:
-      gitops_app_private_key: ${{ secrets.GITOPS_APP_PRIVATE_KEY }}
+    runs-on: ubuntu-latest
+    env:
+      VERSION: ${{ needs.release-please.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5
+        with:
+          ref: refs/tags/${{ env.VERSION }}
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: ${{ env.HELM_VERSION }}
+
+      - name: Package Helm chart
+        run: |
+          helm lint chart --strict
+          helm package chart --version "${{ env.VERSION }}" --app-version "${{ env.VERSION }}"
+
+      - name: Push Helm chart to GHCR (OCI)
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | helm registry login ghcr.io --username ${{ github.actor }} --password-stdin
+          helm push ${{ env.HELM_CHART_NAME }}-${{ env.VERSION}}.tgz oci://ghcr.io/${{ env.GITHUB_REPOSITORY }}

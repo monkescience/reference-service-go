@@ -1,9 +1,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: reference-service-go
+  name: {{ include "fullname" . }}
+  labels:
+    {{- include "labels" . | nindent 4 }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.replicaCount }}
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -11,11 +13,11 @@ spec:
       maxSurge: 25%
   selector:
     matchLabels:
-      app.kubernetes.io/name: reference-service-go
+      {{- include "selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: reference-service-go
+        {{- include "labels" . | nindent 8 }}
     spec:
       securityContext:
         runAsNonRoot: true
@@ -24,8 +26,8 @@ spec:
           type: RuntimeDefault
       terminationGracePeriodSeconds: 30
       containers:
-        - name: reference-service-go
-          image: ghcr.io/monkescience/reference-service-go:PLACEHOLDER
+        - name: app
+          image: "ghcr.io/monkescience/reference-service-go:{{ .Chart.AppVersion }}"
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
@@ -36,12 +38,13 @@ spec:
           ports:
             - containerPort: 8080
               name: http
+          env:
+            - name: REGION
+              value: {{ .Values.env.region | quote }}
+            - name: ENVIRONMENT
+              value: {{ .Values.env.environment | quote }}
           resources:
-            requests:
-              cpu: 250m
-              memory: 128Mi
-            limits:
-              memory: 128Mi
+            {{- toYaml .Values.resources | nindent 12 }}
           livenessProbe:
             httpGet:
               path: /status/live
