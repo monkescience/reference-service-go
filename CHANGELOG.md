@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.5.2](https://github.com/monkescience/reference-service-go/compare/0.5.1...0.5.2) (2025-11-08)
+
+
+### Bug Fixes
+
+* **ci:** update Helm push target to use HELM_REPOSITORY ([df41bdb](https://github.com/monkescience/reference-service-go/commit/df41bdb0b88cb04a33ad3c6980ce928bb26b10de))
+
 ## [0.5.1](https://github.com/monkescience/reference-service-go/compare/0.5.0...0.5.1) (2025-11-08)
 
 
