@@ -1,6 +1,7 @@
 package memory
 
 import (
+	"sort"
 	"sync"
 
 	dom "reference-service-go/internal/domain/order"
@@ -20,41 +21,49 @@ func NewRepository() *Repository {
 	return &Repository{orders: make(map[string]dom.Order)}
 }
 
-func (r *Repository) StoreOrder(o dom.Order) error {
-	r.ordersMutex.Lock()
-	defer r.ordersMutex.Unlock()
-	r.orders[o.OrderID] = o
+func (repository *Repository) StoreOrder(ord dom.Order) error {
+	repository.ordersMutex.Lock()
+	defer repository.ordersMutex.Unlock()
+	repository.orders[ord.OrderID] = ord
 	return nil
 }
 
-func (r *Repository) GetOrder(orderID string) (dom.Order, bool) {
-	r.ordersMutex.RLock()
-	defer r.ordersMutex.RUnlock()
-	o, exists := r.orders[orderID]
-	return o, exists
+func (repository *Repository) GetOrder(orderID string) (dom.Order, bool) {
+	repository.ordersMutex.RLock()
+	defer repository.ordersMutex.RUnlock()
+	ord, exists := repository.orders[orderID]
+	return ord, exists
 }
 
-func (r *Repository) GetOrders(customerID *string, limit, offset int) []dom.Order {
-	r.ordersMutex.RLock()
-	defer r.ordersMutex.RUnlock()
+func (repository *Repository) GetOrders(customerID *string, limit, offset int) []dom.Order {
+	repository.ordersMutex.RLock()
+	defer repository.ordersMutex.RUnlock()
 
-	var filtered []dom.Order
-	for _, o := range r.orders {
-		if customerID != nil && o.CustomerID != *customerID {
+	var filteredOrders []dom.Order
+	for _, ord := range repository.orders {
+		if customerID != nil && ord.CustomerID != *customerID {
 			continue
 		}
-		filtered = append(filtered, o)
+		filteredOrders = append(filteredOrders, ord)
 	}
 
+	// Sort deterministically: by CreationDate asc, then OrderID asc
+	sort.Slice(filteredOrders, func(i, j int) bool {
+		if filteredOrders[i].CreationDate.Equal(filteredOrders[j].CreationDate) {
+			return filteredOrders[i].OrderID < filteredOrders[j].OrderID
+		}
+		return filteredOrders[i].CreationDate.Before(filteredOrders[j].CreationDate)
+	})
+
 	var result []dom.Order
-	for i, o := range filtered {
-		if i < offset {
+	for index, ord := range filteredOrders {
+		if index < offset {
 			continue
 		}
 		if len(result) >= limit {
 			break
 		}
-		result = append(result, o)
+		result = append(result, ord)
 	}
 	return result
 }

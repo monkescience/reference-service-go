@@ -8,7 +8,7 @@ import (
 	repomem "reference-service-go/internal/adapters/repository/memory"
 	"reference-service-go/internal/middleware"
 	"reference-service-go/internal/status"
-	uc "reference-service-go/internal/usecase/order"
+	usecase "reference-service-go/internal/usecase/order"
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
@@ -25,12 +25,12 @@ func main() {
 	router.Use(chimiddleware.Recoverer)
 
 	// Wire onion layers
-	repo := repomem.NewRepository()
-	service := uc.NewService(repo)
-	h := order.NewAPI(service)
+	orderRepository := repomem.NewRepository()
+	orderService := usecase.NewService(orderRepository)
+	orderAPI := order.NewAPI(orderService)
 
 	// Register the order API handlers
-	router.Mount("/v1", order.Handler(h))
+	router.Mount("/v1", order.Handler(orderAPI))
 
 	// Create and register health API
 	version := os.Getenv("VERSION")

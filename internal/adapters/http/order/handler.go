@@ -7,19 +7,19 @@ import (
 	"github.com/google/uuid"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 
-	dom "reference-service-go/internal/domain/order"
-	uc "reference-service-go/internal/usecase/order"
+	domain "reference-service-go/internal/domain/order"
+	ports "reference-service-go/internal/ports/order"
 )
 
 // API is a thin HTTP adapter that talks to the use case service
 type API struct {
-	service *uc.Service
+	service ports.Service
 }
 
-func NewAPI(service *uc.Service) *API { return &API{service: service} }
+func NewAPI(service ports.Service) *API { return &API{service: service} }
 
 // GetOrders returns a list of orders with optional filtering
-func (h *API) GetOrders(w http.ResponseWriter, r *http.Request, params GetOrdersParams) {
+func (api *API) GetOrders(w http.ResponseWriter, _ *http.Request, params GetOrdersParams) {
 	limit := 50
 	offset := 0
 	if params.Limit != nil {
@@ -29,25 +29,25 @@ func (h *API) GetOrders(w http.ResponseWriter, r *http.Request, params GetOrders
 		offset = *params.Offset
 	}
 
-	var customerIDStr *string
+	var customerID *string
 	if params.CustomerId != nil {
 		id := params.CustomerId.String()
-		customerIDStr = &id
+		customerID = &id
 	}
 
-	orders := h.service.GetOrders(customerIDStr, limit, offset)
+	orders := api.service.GetOrders(customerID, limit, offset)
 
 	var result OrdersResponse
-	for _, o := range orders {
-		items := make([]OrderItemResponse, len(o.Items))
-		for i, it := range o.Items {
-			items[i] = OrderItemResponse{Name: it.Name}
+	for _, order := range orders {
+		items := make([]OrderItemResponse, len(order.Items))
+		for i, item := range order.Items {
+			items[i] = OrderItemResponse{Name: item.Name}
 		}
 		result = append(result, OrderResponse{
-			OrderId:      o.OrderID,
-			CustomerId:   openapi_types.UUID(uuid.MustParse(o.CustomerID)),
-			CreationDate: o.CreationDate,
-			Status:       OrderStatus(o.Status),
+			OrderId:      order.OrderID,
+			CustomerId:   openapi_types.UUID(uuid.MustParse(order.CustomerID)),
+			CreationDate: order.CreationDate,
+			Status:       OrderStatus(order.Status),
 			Items:        items,
 		})
 	}
@@ -58,65 +58,65 @@ func (h *API) GetOrders(w http.ResponseWriter, r *http.Request, params GetOrders
 }
 
 // PostOrders creates a new order
-func (h *API) PostOrders(w http.ResponseWriter, r *http.Request) {
-	var req OrderRequest
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+func (api *API) PostOrders(w http.ResponseWriter, r *http.Request) {
+	var request OrderRequest
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
 
-	items := make([]dom.OrderItem, len(req.Items))
-	for i, it := range req.Items {
-		items[i] = dom.OrderItem{Name: it.Name}
+	items := make([]domain.OrderItem, len(request.Items))
+	for i, item := range request.Items {
+		items[i] = domain.OrderItem{Name: item.Name}
 	}
-	coreReq := dom.OrderRequest{
-		CustomerID: req.CustomerId.String(),
+	domainRequest := domain.OrderRequest{
+		CustomerID: request.CustomerId.String(),
 		Items:      items,
 	}
 
-	ord, err := h.service.CreateOrder(coreReq)
+	createdOrder, err := api.service.CreateOrder(domainRequest)
 	if err != nil {
 		http.Error(w, "Failed to create order", http.StatusInternalServerError)
 		return
 	}
 
-	respItems := make([]OrderItemResponse, len(ord.Items))
-	for i, it := range ord.Items {
-		respItems[i] = OrderItemResponse{Name: it.Name}
+	responseItems := make([]OrderItemResponse, len(createdOrder.Items))
+	for i, item := range createdOrder.Items {
+		responseItems[i] = OrderItemResponse{Name: item.Name}
 	}
-	resp := OrderResponse{
-		OrderId:      ord.OrderID,
-		CustomerId:   openapi_types.UUID(uuid.MustParse(ord.CustomerID)),
-		CreationDate: ord.CreationDate,
-		Status:       OrderStatus(ord.Status),
-		Items:        respItems,
+	response := OrderResponse{
+		OrderId:      createdOrder.OrderID,
+		CustomerId:   openapi_types.UUID(uuid.MustParse(createdOrder.CustomerID)),
+		CreationDate: createdOrder.CreationDate,
+		Status:       OrderStatus(createdOrder.Status),
+		Items:        responseItems,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	_ = json.NewEncoder(w).Encode(resp)
+	_ = json.NewEncoder(w).Encode(response)
 }
 
 // GetOrder returns one order
-func (h *API) GetOrder(w http.ResponseWriter, r *http.Request, orderID string) {
-	ord, ok := h.service.GetOrder(orderID)
-	if !ok {
+func (api *API) GetOrder(w http.ResponseWriter, _ *http.Request, orderID string) {
+	order, found := api.service.GetOrder(orderID)
+	if !found {
 		http.Error(w, "Order not found", http.StatusNotFound)
 		return
 	}
-	items := make([]OrderItemResponse, len(ord.Items))
-	for i, it := range ord.Items {
-		items[i] = OrderItemResponse{Name: it.Name}
+	items := make([]OrderItemResponse, len(order.Items))
+	for i, item := range order.Items {
+		items[i] = OrderItemResponse{Name: item.Name}
 	}
-	resp := OrderResponse{
-		OrderId:      ord.OrderID,
-		CustomerId:   openapi_types.UUID(uuid.MustParse(ord.CustomerID)),
-		CreationDate: ord.CreationDate,
-		Status:       OrderStatus(ord.Status),
+	response := OrderResponse{
+		OrderId:      order.OrderID,
+		CustomerId:   openapi_types.UUID(uuid.MustParse(order.CustomerID)),
+		CreationDate: order.CreationDate,
+		Status:       OrderStatus(order.Status),
 		Items:        items,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(resp)
+	_ = json.NewEncoder(w).Encode(response)
 }
