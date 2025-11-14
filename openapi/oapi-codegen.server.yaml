@@ -2,4 +2,4 @@ package: order
 generate:
   chi-server: true
   embedded-spec: true
-output: incoming/order/server.gen.go
+output: adapters/http/order/server.gen.go

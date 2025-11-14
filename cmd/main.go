@@ -4,13 +4,14 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"reference-service-go/internal/adapters/http/order"
+	repomem "reference-service-go/internal/adapters/repository/memory"
 	"reference-service-go/internal/middleware"
 	"reference-service-go/internal/status"
+	uc "reference-service-go/internal/usecase/order"
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
-
-	"reference-service-go/internal/incoming/order"
 )
 
 func main() {
@@ -23,11 +24,13 @@ func main() {
 	router.Use(responseTimeHistogramMetric.ResponseTimes)
 	router.Use(chimiddleware.Recoverer)
 
-	// Create a new order server
-	orderServer := order.NewServer()
+	// Wire onion layers
+	repo := repomem.NewRepository()
+	service := uc.NewService(repo)
+	h := order.NewAPI(service)
 
 	// Register the order API handlers
-	router.Mount("/v1", order.Handler(orderServer))
+	router.Mount("/v1", order.Handler(h))
 
 	// Create and register health API
 	version := os.Getenv("VERSION")
