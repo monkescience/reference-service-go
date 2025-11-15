@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/monkescience/reference-service-go/compare/0.5.2...0.6.0) (2025-11-15)
+
+
+### Features
+
+* **release:** add force-release trigger file ([4f3f4d7](https://github.com/monkescience/reference-service-go/commit/4f3f4d745bd38bfc56228a125cf5e53c34d50797))
+
 ## [0.5.2](https://github.com/monkescience/reference-service-go/compare/0.5.1...0.5.2) (2025-11-08)
 
 
