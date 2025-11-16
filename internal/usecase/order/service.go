@@ -23,8 +23,12 @@ func NewService(repo order.Repository) *Service {
 
 // CreateOrder creates a new order with the given details
 func (s *Service) CreateOrder(request domain.OrderRequest) (domain.Order, error) {
+	id, err := domain.GenerateOrderID(request.Country)
+	if err != nil {
+		return domain.Order{}, err
+	}
 	ord := domain.Order{
-		OrderID:      domain.GenerateOrderID(),
+		OrderID:      id,
 		CustomerID:   request.CustomerID,
 		CreationDate: time.Now().UTC(),
 		Status:       "order_placed",

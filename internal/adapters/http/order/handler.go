@@ -2,6 +2,8 @@ package order
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/google/uuid"
@@ -18,7 +20,7 @@ type API struct {
 
 func NewAPI(service ports.Service) *API { return &API{service: service} }
 
-// GetOrders returns a list of orders with optional filtering
+// GetOrders returns a paginated list of orders with optional filtering
 func (api *API) GetOrders(w http.ResponseWriter, _ *http.Request, params GetOrdersParams) {
 	limit := 50
 	offset := 0
@@ -37,24 +39,44 @@ func (api *API) GetOrders(w http.ResponseWriter, _ *http.Request, params GetOrde
 
 	orders := api.service.GetOrders(customerID, limit, offset)
 
-	var result OrdersResponse
+	page := OrdersPage{
+		Data: make([]OrderResponse, 0, len(orders)),
+	}
+	// Fill pagination metadata per OpenAPI
+	if v := len(orders); v >= 0 { // always true, but explicit
+		vv := v
+		page.Total = &vv
+	}
+	if params.Limit != nil {
+		page.Limit = params.Limit
+	} else {
+		v := limit
+		page.Limit = &v
+	}
+	if params.Offset != nil {
+		page.Offset = params.Offset
+	} else {
+		v := offset
+		page.Offset = &v
+	}
+
 	for _, order := range orders {
 		items := make([]OrderItemResponse, len(order.Items))
 		for i, item := range order.Items {
 			items[i] = OrderItemResponse{Name: item.Name}
 		}
-		result = append(result, OrderResponse{
-			OrderId:      order.OrderID,
-			CustomerId:   openapi_types.UUID(uuid.MustParse(order.CustomerID)),
-			CreationDate: order.CreationDate,
-			Status:       OrderStatus(order.Status),
-			Items:        items,
+		page.Data = append(page.Data, OrderResponse{
+			OrderId:    order.OrderID,
+			CustomerId: openapi_types.UUID(uuid.MustParse(order.CustomerID)),
+			CreatedAt:  order.CreationDate,
+			Status:     OrderStatus(order.Status),
+			Items:      items,
 		})
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	_ = json.NewEncoder(w).Encode(result)
+	_ = json.NewEncoder(w).Encode(page)
 }
 
 // PostOrders creates a new order
@@ -72,10 +94,25 @@ func (api *API) PostOrders(w http.ResponseWriter, r *http.Request) {
 	domainRequest := domain.OrderRequest{
 		CustomerID: request.CustomerId.String(),
 		Items:      items,
+		Country:    request.Country,
 	}
 
 	createdOrder, err := api.service.CreateOrder(domainRequest)
 	if err != nil {
+		if errors.Is(err, domain.ErrInvalidCountry) {
+			code := http.StatusBadRequest
+			detail := "country must be exactly two uppercase letters [A-Z]{2} and already uppercase"
+			problem := Problem{
+				Type:   "https://example.com/problems/invalid-country",
+				Title:  "Invalid country",
+				Status: &code,
+				Detail: &detail,
+			}
+			w.Header().Set("Content-Type", "application/problem+json")
+			w.WriteHeader(code)
+			_ = json.NewEncoder(w).Encode(problem)
+			return
+		}
 		http.Error(w, "Failed to create order", http.StatusInternalServerError)
 		return
 	}
@@ -85,13 +122,15 @@ func (api *API) PostOrders(w http.ResponseWriter, r *http.Request) {
 		responseItems[i] = OrderItemResponse{Name: item.Name}
 	}
 	response := OrderResponse{
-		OrderId:      createdOrder.OrderID,
-		CustomerId:   openapi_types.UUID(uuid.MustParse(createdOrder.CustomerID)),
-		CreationDate: createdOrder.CreationDate,
-		Status:       OrderStatus(createdOrder.Status),
-		Items:        responseItems,
+		OrderId:    createdOrder.OrderID,
+		CustomerId: openapi_types.UUID(uuid.MustParse(createdOrder.CustomerID)),
+		CreatedAt:  createdOrder.CreationDate,
+		Status:     OrderStatus(createdOrder.Status),
+		Items:      responseItems,
 	}
 
+	// Set Location header per OpenAPI
+	w.Header().Set("Location", fmt.Sprintf("/v1/orders/%s", createdOrder.OrderID))
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	_ = json.NewEncoder(w).Encode(response)
@@ -109,11 +148,11 @@ func (api *API) GetOrder(w http.ResponseWriter, _ *http.Request, orderID string)
 		items[i] = OrderItemResponse{Name: item.Name}
 	}
 	response := OrderResponse{
-		OrderId:      order.OrderID,
-		CustomerId:   openapi_types.UUID(uuid.MustParse(order.CustomerID)),
-		CreationDate: order.CreationDate,
-		Status:       OrderStatus(order.Status),
-		Items:        items,
+		OrderId:    order.OrderID,
+		CustomerId: uuid.MustParse(order.CustomerID),
+		CreatedAt:  order.CreationDate,
+		Status:     order.Status,
+		Items:      items,
 	}
 
 	w.Header().Set("Content-Type", "application/json")

@@ -9,6 +9,9 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+// OrderId Order identifier string
+type OrderId = string
+
 // OrderItemRequest defines model for order_item_request.
 type OrderItemRequest struct {
 	Name string `json:"name"`
@@ -21,24 +24,57 @@ type OrderItemResponse struct {
 
 // OrderRequest defines model for order_request.
 type OrderRequest struct {
+	// Country Two-letter ISO 3166-1 alpha-2 country code used to build the order_id
+	Country    string             `json:"country"`
 	CustomerId openapi_types.UUID `json:"customer_id"`
 	Items      []OrderItemRequest `json:"items"`
 }
 
 // OrderResponse defines model for order_response.
 type OrderResponse struct {
-	CreationDate time.Time           `json:"creation_date"`
-	CustomerId   openapi_types.UUID  `json:"customer_id"`
-	Items        []OrderItemResponse `json:"items"`
-	OrderId      string              `json:"order_id"`
-	Status       OrderStatus         `json:"status"`
+	CreatedAt  time.Time           `json:"created_at"`
+	CustomerId openapi_types.UUID  `json:"customer_id"`
+	Items      []OrderItemResponse `json:"items"`
+
+	// OrderId Order identifier string
+	OrderId OrderId     `json:"order_id"`
+	Status  OrderStatus `json:"status"`
 }
 
 // OrderStatus defines model for order_status.
 type OrderStatus = string
 
-// OrdersResponse defines model for orders_response.
-type OrdersResponse = []OrderResponse
+// OrdersPage Paginated list of orders with offset pagination metadata
+type OrdersPage struct {
+	Data []OrderResponse `json:"data"`
+
+	// Limit Page size used for this response
+	Limit *int `json:"limit,omitempty"`
+
+	// Offset Offset used for this response
+	Offset *int `json:"offset,omitempty"`
+
+	// Total Total number of orders matching the filter
+	Total *int `json:"total,omitempty"`
+}
+
+// Problem RFC 9457 Problem Details
+type Problem struct {
+	// Detail A human-readable explanation specific to this occurrence of the problem
+	Detail *string `json:"detail,omitempty"`
+
+	// Instance A URI reference that identifies the specific occurrence of the problem
+	Instance *string `json:"instance,omitempty"`
+
+	// Status The HTTP status code for this occurrence of the problem
+	Status *int `json:"status,omitempty"`
+
+	// Title A short, human-readable summary of the problem type
+	Title string `json:"title"`
+
+	// Type An absolute URI that identifies the problem type
+	Type string `json:"type"`
+}
 
 // GetOrdersParams defines parameters for GetOrders.
 type GetOrdersParams struct {

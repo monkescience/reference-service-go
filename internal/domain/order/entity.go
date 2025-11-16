@@ -2,6 +2,8 @@ package order
 
 import (
 	"crypto/rand"
+	"errors"
+	stdregexp "regexp"
 	"time"
 
 	"github.com/oklog/ulid/v2"
@@ -28,11 +30,22 @@ type Order struct {
 type OrderRequest struct {
 	CustomerID string
 	Items      []OrderItem
+	Country    string
 }
 
-// GenerateOrderID generates a unique order ID using ULID
-// Format: <ULID-PART-1>-NONE-<ULID-PART-2>
-func GenerateOrderID() string {
+// ErrInvalidCountry is returned when the country code is not exactly two uppercase ASCII letters
+var ErrInvalidCountry = errors.New("invalid country; must be exactly two uppercase letters matching [A-Z]{2}")
+
+var countryRe = stdregexp.MustCompile(`^[A-Z]{2}$`)
+
+// GenerateOrderID generates a unique order ID using ULID and a 2-letter country segment
+// Format: <ULID-PART-1>-<CC>-<ULID-PART-2>
+func GenerateOrderID(country string) (string, error) {
+	// Validate country code strictly: no normalization, must already be uppercase A-Z
+	if err := validateCountry(country); err != nil {
+		return "", err
+	}
+
 	// Generate ULID
 	entropy := ulid.Monotonic(rand.Reader, 0)
 	id := ulid.MustNew(ulid.Timestamp(time.Now()), entropy)
@@ -45,6 +58,14 @@ func GenerateOrderID() string {
 	part1 := ulidStr[:13]
 	part2 := ulidStr[13:]
 
-	// Format according to spec: <ULID-PART-1>-NONE-<ULID-PART-2>
-	return part1 + "-NONE-" + part2
+	// Format according to spec: <ULID-PART-1>-<CC>-<ULID-PART-2>
+	return part1 + "-" + country + "-" + part2, nil
+}
+
+// validateCountry ensures the string is exactly two uppercase ASCII letters [A-Z]
+func validateCountry(country string) error {
+	if !countryRe.MatchString(country) {
+		return ErrInvalidCountry
+	}
+	return nil
 }
