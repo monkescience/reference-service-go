@@ -4,8 +4,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	frontend "reference-service-go/internal/adapters/http/frontend"
 	statusapi "reference-service-go/internal/adapters/http/status"
-	ui "reference-service-go/internal/adapters/http/ui"
 	"reference-service-go/internal/middleware"
 
 	"github.com/go-chi/chi/v5"
@@ -22,6 +22,12 @@ func main() {
 	router.Use(responseTimeHistogramMetric.ResponseTimes)
 	router.Use(chimiddleware.Recoverer)
 
+	// Serve static files
+	router.Get("/", frontend.IndexHandler)
+
+	// version tile endpoint
+	router.Get("/version-tile", frontend.VersionTileHandler)
+
 	// Create and register health API
 	version := os.Getenv("VERSION")
 	if version == "" {
@@ -32,13 +38,6 @@ func main() {
 	router.Route("/api", func(r chi.Router) {
 		r.Mount("/", statusapi.Handler(statusAPI))
 	})
-
-	// Mount UI (tiles will call /api/status/live directly)
-	dashboard, err := ui.NewDashboard()
-	if err != nil {
-		log.Fatalf("failed to init dashboard: %v", err)
-	}
-	dashboard.Routes(router)
 
 	// Start the server
 	log.Println("Starting server on :8080")

@@ -122,6 +122,24 @@ Follow idiomatic Go practices and community standards when writing Go code. Thes
 - Use `go mod tidy` to clean up unused dependencies
 - Vendor dependencies only when necessary
 
+### Hexagonal Architecture (Ports and Adapters)
+
+- Structure the application around the business logic, independent of external services and frameworks.
+- The core application logic (domain) defines "ports" (Go interfaces) for any interaction with the outside world (e.g., database, UI, external APIs).
+- "Adapters" implement these ports to connect the core to specific technologies.
+  - **Primary Adapters (Driving Adapters):** Drive the application (e.g., HTTP handlers, gRPC servers, CLI commands).
+  - **Secondary Adapters (Driven Adapters):** Are driven by the application (e.g., database repositories, message queue clients, external API clients).
+- Dependencies flow inward: adapters depend on the core, but the core does not depend on adapters.
+- This isolates the business logic from implementation details, making it easier to test, maintain, and adapt to new technologies.
+
+### Code Generation
+
+- Use code generation for creating API interfaces and models from OpenAPI specifications.
+- The OpenAPI specifications are located in the `/openapi` directory.
+- The `go:generate` commands for this are configured in `internal/tools.go`.
+- To regenerate the code, run `go generate ./...` from the root of the project.
+- This ensures that the Go code is always in sync with the API definition.
+
 ## Type Safety and Language Features
 
 ### Type Definitions
@@ -357,6 +375,31 @@ Follow idiomatic Go practices and community standards when writing Go code. Thes
 - Keep commits focused and atomic
 - Write meaningful commit messages
 - Review diffs before committing
+
+### Commit Messages
+
+- Follow the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) specification for commit messages.
+- This provides a standard for creating an explicit commit history, which makes it easier to write automated tools on top of.
+- The commit message should be structured as follows:
+  ```
+  <type>[optional scope]: <description>
+
+  [optional body]
+
+  [optional footer(s)]
+  ```
+- **Common types:**
+  - `feat`: A new feature
+  - `fix`: A bug fix
+  - `docs`: Documentation only changes
+  - `style`: Changes that do not affect the meaning of the code (white-space, formatting, missing semi-colons, etc)
+  - `refactor`: A code change that neither fixes a bug nor adds a feature
+  - `perf`: A code change that improves performance
+  - `test`: Adding missing tests or correcting existing tests
+  - `build`: Changes that affect the build system or external dependencies (example scopes: gulp, broccoli, npm)
+  - `ci`: Changes to our CI configuration files and scripts (example scopes: Travis, Circle, BrowserStack, SauceLabs)
+  - `chore`: Other changes that don't modify `src` or `test` files
+  - `revert`: Reverts a previous commit
 
 ## Common Pitfalls to Avoid
 
