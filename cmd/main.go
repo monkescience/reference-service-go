@@ -4,11 +4,9 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"reference-service-go/internal/adapters/http/order"
-	repomem "reference-service-go/internal/adapters/repository/memory"
+	statusapi "reference-service-go/internal/adapters/http/status"
+	ui "reference-service-go/internal/adapters/http/ui"
 	"reference-service-go/internal/middleware"
-	"reference-service-go/internal/status"
-	usecase "reference-service-go/internal/usecase/order"
 
 	"github.com/go-chi/chi/v5"
 	chimiddleware "github.com/go-chi/chi/v5/middleware"
@@ -24,21 +22,23 @@ func main() {
 	router.Use(responseTimeHistogramMetric.ResponseTimes)
 	router.Use(chimiddleware.Recoverer)
 
-	// Wire onion layers
-	orderRepository := repomem.NewRepository()
-	orderService := usecase.NewService(orderRepository)
-	orderAPI := order.NewAPI(orderService)
-
-	// Register the order API handlers
-	router.Mount("/v1", order.Handler(orderAPI))
-
 	// Create and register health API
 	version := os.Getenv("VERSION")
 	if version == "" {
 		log.Fatal("VERSION environment variable is not set")
 	}
-	healthAPI := status.New(version)
-	healthAPI.RegisterRoutes(router)
+	statusAPI := statusapi.NewAPI(version)
+	// Mount the Status API under /api (e.g., /api/status/live)
+	router.Route("/api", func(r chi.Router) {
+		r.Mount("/", statusapi.Handler(statusAPI))
+	})
+
+	// Mount UI (tiles will call /api/status/live directly)
+	dashboard, err := ui.NewDashboard()
+	if err != nil {
+		log.Fatalf("failed to init dashboard: %v", err)
+	}
+	dashboard.Routes(router)
 
 	// Start the server
 	log.Println("Starting server on :8080")

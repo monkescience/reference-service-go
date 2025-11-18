@@ -1,4 +1,0 @@
-package: order
-generate:
-  models: true
-output: adapters/http/order/models.gen.go

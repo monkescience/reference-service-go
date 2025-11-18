@@ -1,0 +1,40 @@
+{{ define "index.gohtml" }}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Reference Service - Canary Dashboard</title>
+  <script src="https://unpkg.com/htmx.org@1.9.12" integrity="sha384-EOjo8lTI308zUzhtTVZnJguk8lyrOU4mwrB3kpmEYp+QYJ0Q8oZGdbW8Iw7CM80K" crossorigin="anonymous"></script>
+  <style>
+    :root { color-scheme: light dark; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; padding: 2rem; }
+    h1 { margin: 0 0 1rem; font-size: 1.5rem; }
+    .grid { display: grid; gap: 1rem; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+    .tile { border-radius: 12px; padding: 1rem; border: 1px solid #9993; background: #fff4; backdrop-filter: blur(6px); min-height: 120px; display: grid; align-content: center; justify-items: center; }
+    .muted { opacity: .7; font-size: .9rem; }
+    .version { font-size: 1.8rem; font-variant-numeric: tabular-nums; }
+    .error { color: #b00; }
+  </style>
+</head>
+<body>
+  <h1>Reference Service - Canary Dashboard</h1>
+  <p class="muted">Each tile polls /api/status/live every 2s (JSON) and renders the version client-side. Useful for canary rollouts.</p>
+
+  <div class="grid">
+    {{/* Six tiles: fetch JSON from /api/status/live directly, parse & render via htmx event */}}
+    {{ range $i := (slice 1 2 3 4 5 6) }}
+      <div class="tile"
+           hx-get="/api/status/live"
+           hx-trigger="load, every 2s"
+           hx-swap="none"
+           hx-on:htmx:afterRequest="try{const d=JSON.parse(event.detail.xhr.responseText); this.querySelector('.version').textContent=d.version;}catch(e){this.querySelector('.version').textContent='parse error';}"
+           hx-on:htmx:responseError="this.querySelector('.version').textContent='error'; this.classList.add('error')">
+        <div class="muted">Version</div>
+        <div class="version">loading…</div>
+      </div>
+    {{ end }}
+  </div>
+</body>
+</html>
+{{ end }}
