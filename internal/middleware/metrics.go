@@ -10,10 +10,12 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+// HttpResponseTimeMetric wraps a Prometheus histogram for tracking HTTP response times.
 type HttpResponseTimeMetric struct {
 	*prometheus.HistogramVec
 }
 
+// NewHttpResponseTimeHistogramMetric creates a new HTTP response time metric with default labels for method, route, and status code.
 func NewHttpResponseTimeHistogramMetric() *HttpResponseTimeMetric {
 	responseTimeHistogram := metrics.NewHttpResponseTimeHistogram(
 		metrics.HttpResponseTimeOpts{
@@ -27,6 +29,7 @@ func NewHttpResponseTimeHistogramMetric() *HttpResponseTimeMetric {
 	}
 }
 
+// ResponseTimes is a middleware that records HTTP response times and status codes to Prometheus metrics.
 func (httpResponseTimeMetric *HttpResponseTimeMetric) ResponseTimes(next http.Handler) http.Handler {
 	return http.HandlerFunc(
 		func(responseWriter http.ResponseWriter, request *http.Request) {

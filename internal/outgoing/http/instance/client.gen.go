@@ -11,7 +11,26 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
+
+// InstanceInfoResponse defines model for instance_info_response.
+type InstanceInfoResponse struct {
+	// GoVersion Go runtime version
+	GoVersion string `json:"go_version"`
+
+	// Hostname Instance hostname
+	Hostname string `json:"hostname"`
+
+	// Timestamp Current server timestamp
+	Timestamp time.Time `json:"timestamp"`
+
+	// Uptime Human-readable process uptime
+	Uptime string `json:"uptime"`
+
+	// Version Application version
+	Version string `json:"version"`
+}
 
 // RequestEditorFn  is the function signature for the RequestEditor callback function
 type RequestEditorFn func(ctx context.Context, req *http.Request) error

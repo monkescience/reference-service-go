@@ -8,6 +8,7 @@ type HttpResponseTimeOpts struct {
 	LabelNames []string
 }
 
+// NewHttpResponseTimeHistogram creates a new Prometheus histogram for tracking HTTP response times in seconds.
 func NewHttpResponseTimeHistogram(opts HttpResponseTimeOpts) *prometheus.HistogramVec {
 	return prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{

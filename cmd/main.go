@@ -37,7 +37,7 @@ func main() {
 
 	// Frontend handler
 	templatesPath := filepath.Join("internal", "incoming", "http", "frontend", "templates")
-	frontendHandler, err := frontend.NewFrontendHandler(templatesPath, "http://localhost:8080/instance/info")
+	frontendHandler, err := frontend.NewFrontendHandler(templatesPath, "http://localhost:8080/instance/info", cfg.TileColors)
 	if err != nil {
 		log.Fatalf("failed to create frontend handler: %v", err)
 	}
@@ -48,6 +48,6 @@ func main() {
 	log.Println("Starting server on :8080")
 	log.Println("Open http://localhost:8080 in your browser")
 	if err := http.ListenAndServe(":8080", router); err != nil {
-		log.Fatalf("Error starting server: %v", err)
+		log.Fatalf("error starting server: %v", err)
 	}
 }

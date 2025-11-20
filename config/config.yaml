@@ -1,1 +1,12 @@
-version: "0.1.0"
+# Tile color configuration
+# These colors will be used for instance tiles based on version
+# Colors are selected deterministically based on version hash
+tile-colors:
+  - "#667eea"  # Purple-blue
+  - "#f093fb"  # Pink
+  - "#4facfe"  # Light blue
+  - "#43e97b"  # Green
+  - "#fa709a"  # Rose
+  - "#feca57"  # Yellow
+  - "#ff6348"  # Coral
+  - "#1dd1a1"  # Turquoise

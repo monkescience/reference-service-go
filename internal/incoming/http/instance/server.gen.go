@@ -12,10 +12,29 @@ import (
 	"net/url"
 	"path"
 	"strings"
+	"time"
 
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/go-chi/chi/v5"
 )
+
+// InstanceInfoResponse defines model for instance_info_response.
+type InstanceInfoResponse struct {
+	// GoVersion Go runtime version
+	GoVersion string `json:"go_version"`
+
+	// Hostname Instance hostname
+	Hostname string `json:"hostname"`
+
+	// Timestamp Current server timestamp
+	Timestamp time.Time `json:"timestamp"`
+
+	// Uptime Human-readable process uptime
+	Uptime string `json:"uptime"`
+
+	// Version Application version
+	Version string `json:"version"`
+}
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
