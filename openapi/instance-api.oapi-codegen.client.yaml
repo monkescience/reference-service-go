@@ -1,0 +1,4 @@
+package: instanceapi
+generate:
+  client: true
+output: ../internal/outgoing/http/instance/client.gen.go

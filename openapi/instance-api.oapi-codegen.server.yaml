@@ -1,0 +1,5 @@
+package: instanceapi
+generate:
+  chi-server: true
+  embedded-spec: true
+output: ../internal/incoming/http/instance/server.gen.go

@@ -1,5 +1,0 @@
-package: statusapi
-generate:
-  chi-server: true
-  embedded-spec: true
-output: internal/adapters/http/status/server.gen.go
