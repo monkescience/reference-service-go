@@ -7,9 +7,10 @@ import (
 	"html/template"
 	"net/http"
 	"path/filepath"
-	"reference-service-go/internal/incoming/http/instance"
 	"strconv"
 	"time"
+
+	instanceapi "reference-service-go/internal/incoming/http/instance"
 )
 
 // FrontendHandler handles frontend HTTP requests for the web UI.
@@ -38,7 +39,10 @@ type IndexData struct {
 }
 
 // NewFrontendHandler creates a new frontend handler with the specified templates path, instance API URL, and tile colors.
-func NewFrontendHandler(templatesPath, instanceURL string, tileColors []string) (*FrontendHandler, error) {
+func NewFrontendHandler(
+	templatesPath, instanceURL string,
+	tileColors []string,
+) (*FrontendHandler, error) {
 	tmpl, err := template.ParseGlob(filepath.Join(templatesPath, "*.gohtml"))
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse templates: %w", err)
@@ -61,7 +65,11 @@ func (h *FrontendHandler) IndexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.templates.ExecuteTemplate(w, "index.gohtml", data); err != nil {
-		http.Error(w, fmt.Sprintf("failed to render template: %v", err), http.StatusInternalServerError)
+		http.Error(
+			w,
+			fmt.Sprintf("failed to render template: %v", err),
+			http.StatusInternalServerError,
+		)
 		return
 	}
 }
@@ -72,7 +80,8 @@ func (h *FrontendHandler) TilesHandler(w http.ResponseWriter, r *http.Request) {
 	count := 3 // Default
 
 	if countStr != "" {
-		if parsedCount, err := strconv.Atoi(countStr); err == nil && parsedCount > 0 && parsedCount <= 20 {
+		if parsedCount, err := strconv.Atoi(countStr); err == nil && parsedCount > 0 &&
+			parsedCount <= 20 {
 			count = parsedCount
 		}
 	}
@@ -101,7 +110,11 @@ func (h *FrontendHandler) TilesHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.templates.ExecuteTemplate(w, "tiles.gohtml", data); err != nil {
-		http.Error(w, fmt.Sprintf("failed to render tiles: %v", err), http.StatusInternalServerError)
+		http.Error(
+			w,
+			fmt.Sprintf("failed to render tiles: %v", err),
+			http.StatusInternalServerError,
+		)
 		return
 	}
 }
@@ -109,12 +122,18 @@ func (h *FrontendHandler) TilesHandler(w http.ResponseWriter, r *http.Request) {
 func (h *FrontendHandler) fetchInstanceInfo() (instanceapi.InstanceInfoResponse, error) {
 	resp, err := h.instanceClient.Get(h.instanceURL)
 	if err != nil {
-		return instanceapi.InstanceInfoResponse{}, fmt.Errorf("failed to fetch instance info: %w", err)
+		return instanceapi.InstanceInfoResponse{}, fmt.Errorf(
+			"failed to fetch instance info: %w",
+			err,
+		)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		return instanceapi.InstanceInfoResponse{}, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+		return instanceapi.InstanceInfoResponse{}, fmt.Errorf(
+			"unexpected status code: %d",
+			resp.StatusCode,
+		)
 	}
 
 	var info instanceapi.InstanceInfoResponse

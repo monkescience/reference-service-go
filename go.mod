@@ -17,6 +17,7 @@ require (
 	github.com/go-openapi/jsonpointer v0.22.2 // indirect
 	github.com/go-openapi/swag/jsonname v0.25.1 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
+	github.com/magefile/mage v1.15.0 // indirect
 	github.com/mailru/easyjson v0.9.1 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect

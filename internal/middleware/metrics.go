@@ -2,12 +2,12 @@ package middleware
 
 import (
 	"net/http"
-	"reference-service-go/internal/metrics"
 	"strconv"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/prometheus/client_golang/prometheus"
+	"reference-service-go/internal/metrics"
 )
 
 // HttpResponseTimeMetric wraps a Prometheus histogram for tracking HTTP response times.
@@ -30,7 +30,9 @@ func NewHttpResponseTimeHistogramMetric() *HttpResponseTimeMetric {
 }
 
 // ResponseTimes is a middleware that records HTTP response times and status codes to Prometheus metrics.
-func (httpResponseTimeMetric *HttpResponseTimeMetric) ResponseTimes(next http.Handler) http.Handler {
+func (httpResponseTimeMetric *HttpResponseTimeMetric) ResponseTimes(
+	next http.Handler,
+) http.Handler {
 	return http.HandlerFunc(
 		func(responseWriter http.ResponseWriter, request *http.Request) {
 			startTime := time.Now()
@@ -42,7 +44,8 @@ func (httpResponseTimeMetric *HttpResponseTimeMetric) ResponseTimes(next http.Ha
 			statusCode := strconv.Itoa(responseWriterContainer.statusCode)
 			route := getRoutePattern(request)
 			duration := time.Since(startTime)
-			httpResponseTimeMetric.WithLabelValues(request.Method, route, statusCode).Observe(duration.Seconds())
+			httpResponseTimeMetric.WithLabelValues(request.Method, route, statusCode).
+				Observe(duration.Seconds())
 		},
 	)
 }
