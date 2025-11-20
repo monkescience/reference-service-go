@@ -8,9 +8,7 @@ import (
 )
 
 type Config struct {
-	StatusApi struct {
-		BaseUrl string `yaml:"baseUrl"`
-	} `yaml:"statusApi"`
+	Version string `yaml:"version"`
 }
 
 func Load(path string) (*Config, error) {
