@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/monkescience/reference-service-go/compare/0.6.0...0.7.0) (2025-11-28)
+
+
+### Features
+
+* **order:** add country support in order ID and enhance API responses ([ba759c3](https://github.com/monkescience/reference-service-go/commit/ba759c364b78d6b7fbc2229b840ab186f5bb89cb))
+
 ## [0.6.0](https://github.com/monkescience/reference-service-go/compare/0.5.2...0.6.0) (2025-11-15)
 
 
