@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"reference-service-go/internal/config"
 	"reference-service-go/internal/incoming/http/frontend"
-	"reference-service-go/internal/middleware"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -46,13 +45,10 @@ func setupLogger(cfg *config.Config) *slog.Logger {
 func setupRouter(logger *slog.Logger, cfg *config.Config) (*chi.Mux, error) {
 	router := chi.NewRouter()
 
-	responseTimeHistogramMetric := middleware.NewHttpResponseTimeHistogramMetric()
-
 	// Add vital recovery middleware
 	router.Use(vital.Recovery(logger))
 	router.Use(vital.RequestLogger(logger))
 	router.Use(vital.TraceContext())
-	router.Use(responseTimeHistogramMetric.ResponseTimes)
 
 	// Instance API handler
 	instanceHandler := instanceapi.NewInstanceHandler(cfg.Version)
@@ -99,8 +95,6 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to setup router: %v", err)
 	}
-
-	logger.Info("starting server", slog.Int("port", serverPort))
 
 	// Create vital server with configuration options
 	server := vital.NewServer(

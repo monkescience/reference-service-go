@@ -13,15 +13,12 @@ var (
 	ErrVersionRequired = errors.New("VERSION environment variable is required")
 	// ErrTileColorsRequired is returned when tile_colors is not configured in the config file.
 	ErrTileColorsRequired = errors.New("tile_colors must be configured in the config file")
-	// ErrJsonLogsRequired is returned when json_logs is not configured in the config file.
-	ErrJsonLogsRequired = errors.New("json_logs must be configured in the config file")
 )
 
 // Config holds the application configuration.
 type Config struct {
 	Version    string   `yaml:"-"`           // Version must be set via VERSION environment variable only
 	TileColors []string `yaml:"tile_colors"` // Available colors for instance tiles based on version
-	JsonLogs   *bool    `yaml:"json_logs"`   // Enable JSON logging format (deprecated, use LogConfig.Format)
 	LogConfig  struct {
 		Level     string `yaml:"level"`      // Log level (debug, info, warn, error)
 		Format    string `yaml:"format"`     // Log format (json, text)
@@ -61,10 +58,6 @@ func Load(path string) (*Config, error) {
 
 	if len(cfg.TileColors) == 0 {
 		return nil, ErrTileColorsRequired
-	}
-
-	if cfg.JsonLogs == nil {
-		return nil, ErrJsonLogsRequired
 	}
 
 	return &cfg, nil

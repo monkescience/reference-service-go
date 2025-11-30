@@ -18,7 +18,6 @@ env:
   environment: ""
 
 config:
-  json_logs: true
   log_config:
     level: "info"
     format: "json"

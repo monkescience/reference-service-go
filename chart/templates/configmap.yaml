@@ -6,7 +6,6 @@ metadata:
     {{- include "labels" . | nindent 4 }}
 data:
   config.yaml: |
-    json_logs: {{ index .Values.config "json_logs" }}
     log_config:
       level: {{ index .Values.config.log_config "level" | default "info" | quote }}
       format: {{ index .Values.config.log_config "format" | default "json" | quote }}
