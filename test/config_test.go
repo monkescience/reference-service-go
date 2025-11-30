@@ -3,9 +3,8 @@ package test
 import (
 	"os"
 	"path/filepath"
-	"testing"
-
 	"reference-service-go/internal/config"
+	"testing"
 )
 
 func TestConfig(t *testing.T) {
@@ -13,7 +12,8 @@ func TestConfig(t *testing.T) {
 		// GIVEN
 		tempDir := t.TempDir()
 		configPath := filepath.Join(tempDir, "config.yaml")
-		configContent := `tile-colors:
+		configContent := `json_logs: true
+tile_colors:
   - "#667eea"
   - "#f093fb"
   - "#4facfe"
@@ -45,6 +45,10 @@ func TestConfig(t *testing.T) {
 				t.Errorf("expected color[%d] to be %v, got: %v", i, expected, cfg.TileColors[i])
 			}
 		}
+
+		if cfg.JsonLogs == nil || !*cfg.JsonLogs {
+			t.Errorf("expected json_logs to be true, got: %v", cfg.JsonLogs)
+		}
 	})
 
 	t.Run("load config without VERSION env var", func(t *testing.T) {
@@ -53,7 +57,8 @@ func TestConfig(t *testing.T) {
 		// GIVEN
 		tempDir := t.TempDir()
 		configPath := filepath.Join(tempDir, "config.yaml")
-		configContent := `tile-colors:
+		configContent := `json_logs: true
+tile_colors:
   - "#667eea"
 `
 		if err := os.WriteFile(configPath, []byte(configContent), 0o644); err != nil {
@@ -82,7 +87,7 @@ func TestConfig(t *testing.T) {
 		// GIVEN
 		tempDir := t.TempDir()
 		configPath := filepath.Join(tempDir, "config.yaml")
-		configContent := `{}`
+		configContent := `json_logs: true`
 		if err := os.WriteFile(configPath, []byte(configContent), 0o644); err != nil {
 			t.Fatalf("failed to write test config: %v", err)
 		}
@@ -94,14 +99,14 @@ func TestConfig(t *testing.T) {
 
 		// THEN
 		if err == nil {
-			t.Fatal("expected error for missing tile-colors, got nil")
+			t.Fatal("expected error for missing tile_colors, got nil")
 		}
 
 		if cfg != nil {
 			t.Errorf("expected nil config, got: %v", cfg)
 		}
 
-		expectedErr := "tile-colors must be configured in the config file"
+		expectedErr := "tile_colors must be configured in the config file"
 		if err.Error() != expectedErr {
 			t.Errorf("expected error '%v', got: '%v'", expectedErr, err.Error())
 		}
@@ -111,7 +116,8 @@ func TestConfig(t *testing.T) {
 		// GIVEN
 		tempDir := t.TempDir()
 		configPath := filepath.Join(tempDir, "config.yaml")
-		configContent := `tile-colors: []
+		configContent := `json_logs: true
+tile_colors: []
 `
 		if err := os.WriteFile(configPath, []byte(configContent), 0o644); err != nil {
 			t.Fatalf("failed to write test config: %v", err)
@@ -124,14 +130,14 @@ func TestConfig(t *testing.T) {
 
 		// THEN
 		if err == nil {
-			t.Fatal("expected error for empty tile-colors array, got nil")
+			t.Fatal("expected error for empty tile_colors array, got nil")
 		}
 
 		if cfg != nil {
 			t.Errorf("expected nil config, got: %v", cfg)
 		}
 
-		expectedErr := "tile-colors must be configured in the config file"
+		expectedErr := "tile_colors must be configured in the config file"
 		if err.Error() != expectedErr {
 			t.Errorf("expected error '%v', got: '%v'", expectedErr, err.Error())
 		}
@@ -160,7 +166,8 @@ func TestConfig(t *testing.T) {
 		tempDir := t.TempDir()
 		configPath := filepath.Join(tempDir, "config.yaml")
 		configContent := `version: "should-be-ignored"
-tile-colors:
+json_logs: true
+tile_colors:
   - "#667eea"
 `
 		if err := os.WriteFile(configPath, []byte(configContent), 0o644); err != nil {
@@ -185,7 +192,8 @@ tile-colors:
 		// GIVEN
 		tempDir := t.TempDir()
 		configPath := filepath.Join(tempDir, "config.yaml")
-		configContent := `tile-colors:
+		configContent := `json_logs: false
+tile_colors:
   - "#667eea"
   - "#f093fb"
   - "#4facfe"
@@ -210,6 +218,41 @@ tile-colors:
 
 		if len(cfg.TileColors) != 8 {
 			t.Errorf("expected 8 tile colors, got: %d", len(cfg.TileColors))
+		}
+
+		if cfg.JsonLogs == nil || *cfg.JsonLogs {
+			t.Errorf("expected json_logs to be false, got: %v", cfg.JsonLogs)
+		}
+	})
+
+	t.Run("load config without json_logs", func(t *testing.T) {
+		// GIVEN
+		tempDir := t.TempDir()
+		configPath := filepath.Join(tempDir, "config.yaml")
+		configContent := `tile_colors:
+  - "#667eea"
+`
+		if err := os.WriteFile(configPath, []byte(configContent), 0o644); err != nil {
+			t.Fatalf("failed to write test config: %v", err)
+		}
+
+		t.Setenv("VERSION", "1.0.0")
+
+		// WHEN
+		cfg, err := config.Load(configPath)
+
+		// THEN
+		if err == nil {
+			t.Fatal("expected error for missing json_logs, got nil")
+		}
+
+		if cfg != nil {
+			t.Errorf("expected nil config, got: %v", cfg)
+		}
+
+		expectedErr := "json_logs must be configured in the config file"
+		if err.Error() != expectedErr {
+			t.Errorf("expected error '%v', got: '%v'", expectedErr, err.Error())
 		}
 	})
 }

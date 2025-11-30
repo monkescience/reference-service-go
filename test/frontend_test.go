@@ -6,10 +6,10 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"reference-service-go/internal/incoming/http/frontend"
 	"strings"
 	"testing"
 
-	"reference-service-go/internal/incoming/http/frontend"
 	instanceapi "reference-service-go/internal/incoming/http/instance"
 )
 

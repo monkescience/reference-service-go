@@ -1,40 +1,70 @@
 package config
 
 import (
+	"errors"
 	"fmt"
 	"os"
 
 	"gopkg.in/yaml.v3"
 )
 
+var (
+	// ErrVersionRequired is returned when the VERSION environment variable is not set.
+	ErrVersionRequired = errors.New("VERSION environment variable is required")
+	// ErrTileColorsRequired is returned when tile_colors is not configured in the config file.
+	ErrTileColorsRequired = errors.New("tile_colors must be configured in the config file")
+	// ErrJsonLogsRequired is returned when json_logs is not configured in the config file.
+	ErrJsonLogsRequired = errors.New("json_logs must be configured in the config file")
+)
+
 // Config holds the application configuration.
 type Config struct {
 	Version    string   `yaml:"-"`           // Version must be set via VERSION environment variable only
-	TileColors []string `yaml:"tile-colors"` // Available colors for instance tiles based on version
+	TileColors []string `yaml:"tile_colors"` // Available colors for instance tiles based on version
+	JsonLogs   *bool    `yaml:"json_logs"`   // Enable JSON logging format (deprecated, use LogConfig.Format)
+	LogConfig  struct {
+		Level     string `yaml:"level"`      // Log level (debug, info, warn, error)
+		Format    string `yaml:"format"`     // Log format (json, text)
+		AddSource bool   `yaml:"add_source"` // Include source file and line number
+	} `yaml:"log_config"`
 }
 
 // Load reads configuration from the specified YAML file and environment variables.
 // The VERSION environment variable is required and must be set; it cannot be configured via the config file.
 func Load(path string) (*Config, error) {
-	f, err := os.Open(path)
+	//nolint:gosec // Config file path is expected to be provided by trusted deployment configuration
+	configFile, err := os.Open(path)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open config file: %w", err)
 	}
-	defer f.Close()
+
+	//nolint:noinlineerr,wsl // Defer close pattern is idiomatic for resource cleanup
+	defer func() {
+		if closeErr := configFile.Close(); closeErr != nil {
+			err = errors.Join(err, fmt.Errorf("failed to close config file: %w", closeErr))
+		}
+	}()
 
 	var cfg Config
-	decoder := yaml.NewDecoder(f)
-	if err := decoder.Decode(&cfg); err != nil {
+
+	decoder := yaml.NewDecoder(configFile)
+
+	err = decoder.Decode(&cfg)
+	if err != nil {
 		return nil, fmt.Errorf("failed to decode config: %w", err)
 	}
 
 	cfg.Version = os.Getenv("VERSION")
 	if cfg.Version == "" {
-		return nil, fmt.Errorf("VERSION environment variable is required")
+		return nil, ErrVersionRequired
 	}
 
 	if len(cfg.TileColors) == 0 {
-		return nil, fmt.Errorf("tile-colors must be configured in the config file")
+		return nil, ErrTileColorsRequired
+	}
+
+	if cfg.JsonLogs == nil {
+		return nil, ErrJsonLogsRequired
 	}
 
 	return &cfg, nil

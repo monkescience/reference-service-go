@@ -2,34 +2,57 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
-	"net/http"
+	"log/slog"
 	"path/filepath"
-
-	"github.com/go-chi/chi/v5"
-	chimiddleware "github.com/go-chi/chi/v5/middleware"
 	"reference-service-go/internal/config"
 	"reference-service-go/internal/incoming/http/frontend"
-	instanceapi "reference-service-go/internal/incoming/http/instance"
 	"reference-service-go/internal/middleware"
+	"time"
+
+	"github.com/go-chi/chi/v5"
+	"github.com/monkescience/vital"
+
+	instanceapi "reference-service-go/internal/incoming/http/instance"
 )
 
-func main() {
-	configPath := flag.String("config", "/config/config.yaml", "Path to the configuration file")
-	flag.Parse()
+const (
+	serverPort         = 8080
+	serverReadTimeout  = 10 * time.Second
+	serverWriteTimeout = 10 * time.Second
+	serverIdleTimeout  = 120 * time.Second
+	shutdownTimeout    = 20 * time.Second
+)
 
-	cfg, err := config.Load(*configPath)
-	if err != nil {
-		log.Fatalf("failed to load config: %v", err)
+func setupLogger(cfg *config.Config) *slog.Logger {
+	logConfig := vital.LogConfig{
+		Level:     cfg.LogConfig.Level,
+		Format:    cfg.LogConfig.Format,
+		AddSource: cfg.LogConfig.AddSource,
 	}
 
+	handler, err := vital.NewHandlerFromConfig(logConfig, vital.WithBuiltinKeys())
+	if err != nil {
+		log.Fatalf("failed to create logger handler: %v", err)
+	}
+
+	logger := slog.New(handler)
+	slog.SetDefault(logger)
+
+	return logger
+}
+
+func setupRouter(logger *slog.Logger, cfg *config.Config) (*chi.Mux, error) {
 	router := chi.NewRouter()
 
 	responseTimeHistogramMetric := middleware.NewHttpResponseTimeHistogramMetric()
 
-	// Add some middleware
+	// Add vital recovery middleware
+	router.Use(vital.Recovery(logger))
+	router.Use(vital.RequestLogger(logger))
+	router.Use(vital.TraceContext())
 	router.Use(responseTimeHistogramMetric.ResponseTimes)
-	router.Use(chimiddleware.Recoverer)
 
 	// Instance API handler
 	instanceHandler := instanceapi.NewInstanceHandler(cfg.Version)
@@ -37,21 +60,59 @@ func main() {
 
 	// Frontend handler
 	templatesPath := filepath.Join("internal", "incoming", "http", "frontend", "templates")
+
 	frontendHandler, err := frontend.NewFrontendHandler(
 		templatesPath,
 		"http://localhost:8080/instance/info",
 		cfg.TileColors,
 	)
 	if err != nil {
-		log.Fatalf("failed to create frontend handler: %v", err)
+		return nil, fmt.Errorf("failed to create frontend handler: %w", err)
 	}
 
 	router.Get("/", frontendHandler.IndexHandler)
 	router.Get("/tiles", frontendHandler.TilesHandler)
 
-	log.Println("Starting server on :8080")
-	log.Println("Open http://localhost:8080 in your browser")
-	if err := http.ListenAndServe(":8080", router); err != nil {
-		log.Fatalf("error starting server: %v", err)
+	// Add vital health endpoints
+	healthHandler := vital.NewHealthHandler(
+		vital.WithVersion(cfg.Version),
+		vital.WithEnvironment("production"),
+	)
+	router.Mount("/health", healthHandler)
+
+	return router, nil
+}
+
+func main() {
+	configPath := flag.String("config", "/config/config.yaml", "Path to the configuration file")
+
+	flag.Parse()
+
+	cfg, err := config.Load(*configPath)
+	if err != nil {
+		log.Fatalf("failed to load config: %v", err)
 	}
+
+	logger := setupLogger(cfg)
+
+	router, err := setupRouter(logger, cfg)
+	if err != nil {
+		log.Fatalf("failed to setup router: %v", err)
+	}
+
+	logger.Info("starting server", slog.Int("port", serverPort))
+
+	// Create vital server with configuration options
+	server := vital.NewServer(
+		router,
+		vital.WithPort(serverPort),
+		vital.WithReadTimeout(serverReadTimeout),
+		vital.WithWriteTimeout(serverWriteTimeout),
+		vital.WithIdleTimeout(serverIdleTimeout),
+		vital.WithShutdownTimeout(shutdownTimeout),
+		vital.WithLogger(logger),
+	)
+
+	// Run server with graceful shutdown
+	server.Run()
 }

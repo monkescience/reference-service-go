@@ -1,7 +1,9 @@
 package frontend
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"hash/fnv"
 	"html/template"
@@ -12,6 +14,21 @@ import (
 
 	instanceapi "reference-service-go/internal/incoming/http/instance"
 )
+
+const (
+	defaultTileCount         = 3
+	maxTileCount             = 20
+	httpClientTimeout        = 5 * time.Second
+	defaultFallbackColor     = "#667eea"
+	httpRequestTimeout       = 3 * time.Second
+	maxTileColorIndex        = int64(1<<31 - 1) // Max safe int32 value
+	transportMaxIdleConns    = 10
+	transportIdleConnTimeout = 30 * time.Second
+	transportMaxIdlePerHost  = 2
+)
+
+// ErrUnexpectedStatusCode is returned when the instance API returns a non-200 status code.
+var ErrUnexpectedStatusCode = errors.New("unexpected status code from instance API")
 
 // FrontendHandler handles frontend HTTP requests for the web UI.
 type FrontendHandler struct {
@@ -38,7 +55,8 @@ type IndexData struct {
 	Count int
 }
 
-// NewFrontendHandler creates a new frontend handler with the specified templates path, instance API URL, and tile colors.
+// NewFrontendHandler creates a new frontend handler with the specified templates path,
+// instance API URL, and tile colors.
 func NewFrontendHandler(
 	templatesPath, instanceURL string,
 	tileColors []string,
@@ -50,8 +68,17 @@ func NewFrontendHandler(
 
 	return &FrontendHandler{
 		templates: tmpl,
+		//nolint:exhaustruct // Other http.Client fields use sensible defaults
 		instanceClient: &http.Client{
-			Timeout: 5 * time.Second,
+			Timeout: httpClientTimeout,
+			//nolint:exhaustruct // Other http.Transport fields use sensible defaults
+			Transport: &http.Transport{
+				MaxIdleConns:        transportMaxIdleConns,
+				IdleConnTimeout:     transportIdleConnTimeout,
+				DisableCompression:  false,
+				DisableKeepAlives:   false,
+				MaxIdleConnsPerHost: transportMaxIdlePerHost,
+			},
 		},
 		instanceURL: instanceURL,
 		tileColors:  tileColors,
@@ -59,36 +86,40 @@ func NewFrontendHandler(
 }
 
 // IndexHandler serves the main index page with the default tile count.
-func (h *FrontendHandler) IndexHandler(w http.ResponseWriter, r *http.Request) {
+func (h *FrontendHandler) IndexHandler(writer http.ResponseWriter, _ *http.Request) {
 	data := IndexData{
-		Count: 3, // Default number of tiles
+		Count: defaultTileCount,
 	}
 
-	if err := h.templates.ExecuteTemplate(w, "index.gohtml", data); err != nil {
+	err := h.templates.ExecuteTemplate(writer, "index.gohtml", data)
+	if err != nil {
 		http.Error(
-			w,
+			writer,
 			fmt.Sprintf("failed to render template: %v", err),
 			http.StatusInternalServerError,
 		)
+
 		return
 	}
 }
 
 // TilesHandler renders instance tiles based on the count query parameter.
-func (h *FrontendHandler) TilesHandler(w http.ResponseWriter, r *http.Request) {
-	countStr := r.URL.Query().Get("count")
-	count := 3 // Default
+func (h *FrontendHandler) TilesHandler(writer http.ResponseWriter, req *http.Request) {
+	countStr := req.URL.Query().Get("count")
+	count := defaultTileCount
 
 	if countStr != "" {
+		//nolint:noinlineerr // Inline error check is clearer for optional parameter parsing
 		if parsedCount, err := strconv.Atoi(countStr); err == nil && parsedCount > 0 &&
-			parsedCount <= 20 {
+			parsedCount <= maxTileCount {
 			count = parsedCount
 		}
 	}
 
 	instances := make([]InstanceTileData, count)
-	for i := 0; i < count; i++ {
-		info, err := h.fetchInstanceInfo()
+	//nolint:varnamelen // 'i' is idiomatic for loop index
+	for i := range count {
+		info, err := h.fetchInstanceInfo(req.Context())
 		if err != nil {
 			info = instanceapi.InstanceInfoResponse{
 				Version:   "error",
@@ -98,6 +129,7 @@ func (h *FrontendHandler) TilesHandler(w http.ResponseWriter, r *http.Request) {
 				Timestamp: time.Now(),
 			}
 		}
+
 		instances[i] = InstanceTileData{
 			Index: i + 1,
 			Info:  info,
@@ -109,35 +141,56 @@ func (h *FrontendHandler) TilesHandler(w http.ResponseWriter, r *http.Request) {
 		Instances: instances,
 	}
 
-	if err := h.templates.ExecuteTemplate(w, "tiles.gohtml", data); err != nil {
+	err := h.templates.ExecuteTemplate(writer, "tiles.gohtml", data)
+	if err != nil {
 		http.Error(
-			w,
+			writer,
 			fmt.Sprintf("failed to render tiles: %v", err),
 			http.StatusInternalServerError,
 		)
+
 		return
 	}
 }
 
-func (h *FrontendHandler) fetchInstanceInfo() (instanceapi.InstanceInfoResponse, error) {
-	resp, err := h.instanceClient.Get(h.instanceURL)
+func (h *FrontendHandler) fetchInstanceInfo(
+	ctx context.Context,
+) (instanceapi.InstanceInfoResponse, error) {
+	ctx, cancel := context.WithTimeout(ctx, httpRequestTimeout)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, h.instanceURL, nil)
+	if err != nil {
+		return instanceapi.InstanceInfoResponse{}, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	resp, err := h.instanceClient.Do(req)
 	if err != nil {
 		return instanceapi.InstanceInfoResponse{}, fmt.Errorf(
 			"failed to fetch instance info: %w",
 			err,
 		)
 	}
-	defer resp.Body.Close()
+
+	//nolint:noinlineerr,wsl // Defer close pattern is idiomatic for resource cleanup
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			err = errors.Join(err, fmt.Errorf("failed to close response body: %w", closeErr))
+		}
+	}()
 
 	if resp.StatusCode != http.StatusOK {
 		return instanceapi.InstanceInfoResponse{}, fmt.Errorf(
-			"unexpected status code: %d",
+			"%w: %d",
+			ErrUnexpectedStatusCode,
 			resp.StatusCode,
 		)
 	}
 
 	var info instanceapi.InstanceInfoResponse
-	if err := json.NewDecoder(resp.Body).Decode(&info); err != nil {
+
+	err = json.NewDecoder(resp.Body).Decode(&info)
+	if err != nil {
 		return instanceapi.InstanceInfoResponse{}, fmt.Errorf("failed to decode response: %w", err)
 	}
 
@@ -148,12 +201,21 @@ func (h *FrontendHandler) fetchInstanceInfo() (instanceapi.InstanceInfoResponse,
 // Uses a hash function to deterministically select a color.
 func (h *FrontendHandler) getColorForVersion(version string) string {
 	if len(h.tileColors) == 0 {
-		return "#667eea"
+		return defaultFallbackColor
 	}
 
 	hasher := fnv.New32a()
-	hasher.Write([]byte(version))
-	index := hasher.Sum32() % uint32(len(h.tileColors))
+	//nolint:noinlineerr // Hash.Write error is extremely unlikely and non-critical
+	if _, err := hasher.Write([]byte(version)); err != nil {
+		return defaultFallbackColor
+	}
+
+	hashValue := int64(hasher.Sum32())
+	if hashValue > maxTileColorIndex {
+		hashValue = maxTileColorIndex
+	}
+
+	index := hashValue % int64(len(h.tileColors))
 
 	return h.tileColors[index]
 }

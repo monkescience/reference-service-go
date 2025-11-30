@@ -8,28 +8,29 @@ import (
 	"time"
 )
 
-var startTime = time.Now()
-
 // InstanceHandler handles instance information requests.
 type InstanceHandler struct {
-	version string
+	version   string
+	startTime time.Time
 }
 
 // NewInstanceHandler creates a new instance handler with the specified version.
 func NewInstanceHandler(version string) *InstanceHandler {
 	return &InstanceHandler{
-		version: version,
+		version:   version,
+		startTime: time.Now(),
 	}
 }
 
-// GetInstanceInfo returns information about the running instance including version, hostname, uptime, and Go version.
-func (h *InstanceHandler) GetInstanceInfo(w http.ResponseWriter, r *http.Request) {
+// GetInstanceInfo returns information about the running instance including version,
+// hostname, uptime, and Go version.
+func (h *InstanceHandler) GetInstanceInfo(writer http.ResponseWriter, _ *http.Request) {
 	hostname, err := os.Hostname()
 	if err != nil {
 		hostname = "unknown"
 	}
 
-	uptime := time.Since(startTime)
+	uptime := time.Since(h.startTime)
 
 	response := InstanceInfoResponse{
 		Version:   h.version,
@@ -39,10 +40,12 @@ func (h *InstanceHandler) GetInstanceInfo(w http.ResponseWriter, r *http.Request
 		Timestamp: time.Now(),
 	}
 
-	w.Header().Set("Content-Type", "application/json")
+	writer.Header().Set("Content-Type", "application/json")
 
-	if err := json.NewEncoder(w).Encode(response); err != nil {
-		http.Error(w, "failed to encode response", http.StatusInternalServerError)
+	err = json.NewEncoder(writer).Encode(response)
+	if err != nil {
+		http.Error(writer, "failed to encode response", http.StatusInternalServerError)
+
 		return
 	}
 }
