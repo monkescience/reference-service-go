@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.7.0](https://github.com/monkescience/reference-service-go/compare/0.6.0...0.7.0) (2025-12-12)
+
+
+### Features
+
+* **build,ci:** add Mage build tool, linting config, and initial tests ([6965c8a](https://github.com/monkescience/reference-service-go/commit/6965c8af85aa3a39aeef8292d3439707a0ed389c))
+* **order:** add country support in order ID and enhance API responses ([ba759c3](https://github.com/monkescience/reference-service-go/commit/ba759c364b78d6b7fbc2229b840ab186f5bb89cb))
+* **ui:** add dark mode toggle, improve styling consistency, and optimize responsiveness ([5c8e6e2](https://github.com/monkescience/reference-service-go/commit/5c8e6e2a4945f75ee5a1df323807f70d692624c5))
+* **ui:** add instance dashboard with HTMX and dynamic tile updates ([b0394a8](https://github.com/monkescience/reference-service-go/commit/b0394a8dc302b31cd5b1ba70e64fa091becc9940))
+
 ## [0.6.0](https://github.com/monkescience/reference-service-go/compare/0.5.2...0.6.0) (2025-11-15)
 
 
