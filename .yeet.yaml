@@ -1,0 +1,10 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/monkescience/yeet/main/yeet.schema.json
+
+version_files:
+  - chart/Chart.yaml
+
+targets:
+  reference-service-go:
+    type: path
+    path: .
+    tag_prefix: v
