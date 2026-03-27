@@ -1,0 +1,156 @@
+openapi: "3.1.1"
+info:
+  version: 0.1.0
+  title: Import API
+servers:
+  - url: https://api.example.com
+    description: Production
+  - url: https://staging.api.example.com
+    description: Staging
+
+paths:
+  /imports:
+    post:
+      operationId: create_import
+      summary: Trigger a Pokemon data import
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/create_import_request"
+      responses:
+        "201":
+          description: Import successfully created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/import_response"
+        "400":
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/problem_detail"
+
+  /imports/{import_id}:
+    get:
+      operationId: get_import
+      summary: Get import status
+      parameters:
+        - name: import_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The unique identifier of the import
+          example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        "200":
+          description: Import details successfully returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/import_response"
+        "404":
+          description: Import not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/problem_detail"
+
+components:
+  schemas:
+    create_import_request:
+      type: object
+      additionalProperties: false
+      properties:
+        source:
+          type: string
+          description: The data source to import from
+          examples:
+            - "pokeapi"
+      required:
+        - source
+
+    import_response:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier of the import
+          examples:
+            - "550e8400-e29b-41d4-a716-446655440000"
+        source:
+          type: string
+          description: The data source being imported from
+          examples:
+            - "pokeapi"
+        status:
+          type: string
+          description: Current status of the import
+          enum:
+            - pending
+            - processing
+            - completed
+            - failed
+          examples:
+            - "pending"
+        item_count:
+          type: integer
+          description: Number of items imported so far
+          examples:
+            - 0
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when the import was created
+          examples:
+            - "2025-01-15T12:34:56Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: Timestamp when the import was last updated
+          examples:
+            - "2025-01-15T12:34:56Z"
+      required:
+        - id
+        - source
+        - status
+        - item_count
+        - created_at
+        - updated_at
+
+    problem_detail:
+      type: object
+      description: RFC 9457 Problem Details
+      properties:
+        type:
+          type: string
+          description: URI reference identifying the problem type
+          examples:
+            - "about:blank"
+        title:
+          type: string
+          description: Short human-readable summary
+          examples:
+            - "Not Found"
+        status:
+          type: integer
+          description: HTTP status code
+          examples:
+            - 404
+        detail:
+          type: string
+          description: Human-readable explanation
+          examples:
+            - "import not found"
+        instance:
+          type: string
+          description: URI reference identifying the specific occurrence
+      required:
+        - title
+        - status

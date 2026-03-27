@@ -1,0 +1,5 @@
+package: importsapi
+generate:
+  models: true
+  client: true
+output: ../internal/outgoing/http/imports/client.gen.go
