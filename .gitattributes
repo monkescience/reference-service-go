@@ -1,0 +1,25 @@
+* text=auto
+
+# Go
+*.go text diff=golang
+
+# Config
+*.yaml text eol=lf
+*.yml text eol=lf
+*.toml text eol=lf
+*.json text eol=lf
+
+# Markdown
+*.md text diff=markdown
+
+# Helm
+*.tpl text eol=lf
+
+# Shell
+*.sh text eol=lf
+
+# Docker
+Dockerfile* text eol=lf
+
+# Make
+Makefile text eol=lf
