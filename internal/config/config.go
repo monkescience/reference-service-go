@@ -8,12 +8,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// ErrVersionRequired is returned when the VERSION environment variable is not set.
-var ErrVersionRequired = errors.New("VERSION environment variable is required")
-
 // Config holds the application configuration.
 type Config struct {
-	Version   string `yaml:"-"` // Version must be set via VERSION environment variable only
 	LogConfig struct {
 		Level     string `yaml:"level"`      // Log level (debug, info, warn, error)
 		Format    string `yaml:"format"`     // Log format (json, text)
@@ -21,8 +17,7 @@ type Config struct {
 	} `yaml:"log_config"`
 }
 
-// Load reads configuration from the specified YAML file and environment variables.
-// The VERSION environment variable is required and must be set; it cannot be configured via the config file.
+// Load reads configuration from the specified YAML file.
 func Load(path string) (*Config, error) {
 	//nolint:gosec // Config file path is expected to be provided by trusted deployment configuration
 	configFile, err := os.Open(path)
@@ -44,11 +39,6 @@ func Load(path string) (*Config, error) {
 	err = decoder.Decode(&cfg)
 	if err != nil {
 		return nil, fmt.Errorf("failed to decode config: %w", err)
-	}
-
-	cfg.Version = os.Getenv("VERSION")
-	if cfg.Version == "" {
-		return nil, ErrVersionRequired
 	}
 
 	return &cfg, nil

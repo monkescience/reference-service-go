@@ -13,11 +13,9 @@ RUN go mod download
 
 COPY ./cmd ./cmd
 COPY ./internal ./internal
-RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build ${GO_BUILD_ARGS} -o reference-service-go ./cmd/reference-service-go
+RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build ${GO_BUILD_ARGS} -ldflags "-X reference-service-go/internal/build.Version=${VERSION}" -o reference-service-go ./cmd/reference-service-go
 
 FROM gcr.io/distroless/static-debian12
 COPY --from=builder /build/reference-service-go /reference-service-go
-ARG VERSION
-ENV VERSION=${VERSION}
 EXPOSE 8080
 CMD ["/reference-service-go"]

@@ -4,6 +4,7 @@ import (
 	"flag"
 	"log"
 	"log/slog"
+	"reference-service-go/internal/build"
 	"reference-service-go/internal/config"
 	"time"
 
@@ -39,7 +40,7 @@ func setupLogger(cfg *config.Config) *slog.Logger {
 	return logger
 }
 
-func setupRouter(logger *slog.Logger, cfg *config.Config) *chi.Mux {
+func setupRouter(logger *slog.Logger) *chi.Mux {
 	router := chi.NewRouter()
 
 	router.Use(vital.Recovery(logger))
@@ -49,7 +50,7 @@ func setupRouter(logger *slog.Logger, cfg *config.Config) *chi.Mux {
 	importsapi.HandlerFromMux(importHandler, router)
 
 	healthHandler := vital.NewHealthHandler(
-		vital.WithVersion(cfg.Version),
+		vital.WithVersion(build.Version),
 	)
 	router.Mount("/health", healthHandler)
 
@@ -68,7 +69,7 @@ func main() {
 
 	logger := setupLogger(cfg)
 
-	router := setupRouter(logger, cfg)
+	router := setupRouter(logger)
 
 	server := vital.NewServer(
 		router,

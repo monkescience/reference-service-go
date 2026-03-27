@@ -14,10 +14,10 @@ help: ## Display this help message
 
 build: ## Build the application binary
 	@mkdir -p $(BUILD_DIR)
-	CGO_ENABLED=0 go build -trimpath -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/reference-service-go
+	CGO_ENABLED=0 go build -trimpath -ldflags "-X reference-service-go/internal/build.Version=$(VERSION)" -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/reference-service-go
 
 run: ## Run the application locally
-	VERSION=$(VERSION) go run ./cmd/reference-service-go -config config/config.yaml
+	go run -ldflags "-X reference-service-go/internal/build.Version=$(VERSION)" ./cmd/reference-service-go -config config/config.yaml
 
 generate: ## Run go generate to generate code from OpenAPI specs
 	go generate ./...
