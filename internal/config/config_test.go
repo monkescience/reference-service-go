@@ -9,10 +9,10 @@ import (
 
 func TestLoad(t *testing.T) {
 	t.Run("loads valid config", func(t *testing.T) {
-		// WHEN
+		// when: loading a valid config file
 		cfg, err := config.Load("../../config/config.yaml")
 
-		// THEN
+		// then: it returns the parsed config
 		testastic.NoError(t, err)
 		testastic.Equal(t, "info", cfg.LogConfig.Level)
 		testastic.Equal(t, "text", cfg.LogConfig.Format)
@@ -20,10 +20,10 @@ func TestLoad(t *testing.T) {
 	})
 
 	t.Run("returns error when config file does not exist", func(t *testing.T) {
-		// WHEN
+		// when: loading a non-existent file
 		_, err := config.Load("nonexistent.yaml")
 
-		// THEN
+		// then: it returns an error
 		testastic.NotNil(t, err)
 	})
 }

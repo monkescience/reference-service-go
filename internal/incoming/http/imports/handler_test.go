@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -38,56 +39,65 @@ func newRequest(method, target string, body string) *http.Request {
 	return httptest.NewRequestWithContext(context.Background(), method, target, http.NoBody)
 }
 
+func loadFixture(t *testing.T, path string) string {
+	t.Helper()
+
+	data, err := os.ReadFile(path)
+	testastic.NoError(t, err)
+
+	return string(data)
+}
+
 func TestCreateImport(t *testing.T) {
 	t.Parallel()
 
 	t.Run("returns 201 with valid source", func(t *testing.T) {
 		t.Parallel()
 
-		// GIVEN
+		// given: a POST /imports request with a valid source field
 		router := newTestRouter()
-		req := newRequest(http.MethodPost, "/imports", `{"source": "pokeapi"}`)
+		req := newRequest(http.MethodPost, "/imports", loadFixture(t, "testdata/create_import/valid_source/request.json"))
 		rec := httptest.NewRecorder()
 
-		// WHEN
+		// when: the request is sent
 		router.ServeHTTP(rec, req)
 
-		// THEN
+		// then: it responds with 201 and the created import resource
 		testastic.Equal(t, http.StatusCreated, rec.Code)
 		testastic.Equal(t, "application/json", rec.Header().Get("Content-Type"))
-		testastic.AssertJSON(t, "testdata/create_import_response.expected.json", rec.Body)
+		testastic.AssertJSON(t, "testdata/create_import/valid_source/response.json", rec.Body)
 	})
 
 	t.Run("returns 400 with empty body", func(t *testing.T) {
 		t.Parallel()
 
-		// GIVEN
+		// given: a POST /imports request with an empty body
 		router := newTestRouter()
 		req := newRequest(http.MethodPost, "/imports", "")
 		rec := httptest.NewRecorder()
 
-		// WHEN
+		// when: the request is sent
 		router.ServeHTTP(rec, req)
 
-		// THEN
+		// then: it responds with 400 and a problem detail error
 		testastic.Equal(t, http.StatusBadRequest, rec.Code)
-		testastic.AssertJSON(t, "testdata/create_import_bad_request.expected.json", rec.Body)
+		testastic.AssertJSON(t, "testdata/create_import/empty_body/response.json", rec.Body)
 	})
 
 	t.Run("returns 400 with missing source", func(t *testing.T) {
 		t.Parallel()
 
-		// GIVEN
+		// given: a POST /imports request with an empty JSON object (missing required source)
 		router := newTestRouter()
-		req := newRequest(http.MethodPost, "/imports", `{}`)
+		req := newRequest(http.MethodPost, "/imports", loadFixture(t, "testdata/create_import/missing_source/request.json"))
 		rec := httptest.NewRecorder()
 
-		// WHEN
+		// when: the request is sent
 		router.ServeHTTP(rec, req)
 
-		// THEN
+		// then: it responds with 400 and a problem detail error
 		testastic.Equal(t, http.StatusBadRequest, rec.Code)
-		testastic.AssertJSON(t, "testdata/create_import_bad_request.expected.json", rec.Body)
+		testastic.AssertJSON(t, "testdata/create_import/missing_source/response.json", rec.Body)
 	})
 }
 
@@ -97,10 +107,10 @@ func TestGetImport(t *testing.T) {
 	t.Run("returns 200 for existing import", func(t *testing.T) {
 		t.Parallel()
 
-		// GIVEN
+		// given: a previously created import via POST /imports
 		router := newTestRouter()
 
-		createReq := newRequest(http.MethodPost, "/imports", `{"source": "pokeapi"}`)
+		createReq := newRequest(http.MethodPost, "/imports", loadFixture(t, "testdata/get_import/existing/request.json"))
 		createRec := httptest.NewRecorder()
 		router.ServeHTTP(createRec, createReq)
 
@@ -109,30 +119,30 @@ func TestGetImport(t *testing.T) {
 		err := json.NewDecoder(createRec.Body).Decode(&created)
 		testastic.NoError(t, err)
 
-		// WHEN
+		// when: GET /imports/{id} is called with the created import's ID
 		getReq := newRequest(http.MethodGet, "/imports/"+created.Id.String(), "")
 		getRec := httptest.NewRecorder()
 		router.ServeHTTP(getRec, getReq)
 
-		// THEN
+		// then: it responds with 200 and the import resource
 		testastic.Equal(t, http.StatusOK, getRec.Code)
 		testastic.Equal(t, "application/json", getRec.Header().Get("Content-Type"))
-		testastic.AssertJSON(t, "testdata/get_import_response.expected.json", getRec.Body)
+		testastic.AssertJSON(t, "testdata/get_import/existing/response.json", getRec.Body)
 	})
 
 	t.Run("returns 404 for non-existent import", func(t *testing.T) {
 		t.Parallel()
 
-		// GIVEN
+		// given: a GET /imports/{id} request with a non-existent UUID
 		router := newTestRouter()
 		req := newRequest(http.MethodGet, "/imports/550e8400-e29b-41d4-a716-446655440000", "")
 		rec := httptest.NewRecorder()
 
-		// WHEN
+		// when: the request is sent
 		router.ServeHTTP(rec, req)
 
-		// THEN
+		// then: it responds with 404 and a problem detail error
 		testastic.Equal(t, http.StatusNotFound, rec.Code)
-		testastic.AssertJSON(t, "testdata/get_import_not_found.expected.json", rec.Body)
+		testastic.AssertJSON(t, "testdata/get_import/not_found/response.json", rec.Body)
 	})
 }
