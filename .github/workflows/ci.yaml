@@ -1,16 +1,17 @@
-name: Validate Helm Chart
+name: CI
 
 on:
+  push:
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
   workflow_dispatch:
 
 env:
   HELM_VERSION: v3.19.0 # renovate: datasource=github-releases depName=helm/helm
 
 jobs:
-  helm-validate:
+  helm-lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository

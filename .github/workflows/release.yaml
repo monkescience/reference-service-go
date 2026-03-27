@@ -1,0 +1,38 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+        with:
+          fetch-depth: 0
+
+      - name: Generate GitHub App token
+        id: generate-token
+        uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2
+        with:
+          app-id: ${{ vars.YEET_APP_ID }}
+          private-key: ${{ secrets.YEET_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Run yeet
+        uses: docker://ghcr.io/monkescience/yeet:v0.4.6@sha256:c60fbdf1a834661f1358a5af2b5ff509a1d434afb31815899613341abc0ebb6b
+        with:
+          args: release
+        env:
+          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
