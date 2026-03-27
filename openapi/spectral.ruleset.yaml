@@ -1,5 +1,0 @@
-extends: [ "spectral:oas" ]
-
-rules:
-  operation-tags: false
-  operation-description: false

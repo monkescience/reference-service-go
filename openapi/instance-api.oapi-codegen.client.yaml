@@ -1,5 +1,0 @@
-package: instanceapi
-generate:
-  models: true
-  client: true
-output: ../internal/outgoing/http/instance/client.gen.go
