@@ -1,5 +1,11 @@
 # Changelog
 
+## [v0.7.1](https://github.com/monkescience/reference-service-go/compare/0.7.0...v0.7.1) (2026-04-03)
+
+### Features
+
+- **ci:** migrate from release-please to yeet ([2f87154](https://github.com/monkescience/reference-service-go/commit/2f87154627f72fa20bcd3735120b88f17baee66b))
+
 ## [0.7.0](https://github.com/monkescience/reference-service-go/compare/0.6.0...0.7.0) (2025-12-12)
 
 
