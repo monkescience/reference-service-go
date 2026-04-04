@@ -1,17 +1,25 @@
 package main
 
 import (
+	"context"
 	"flag"
+	"fmt"
 	"log"
 	"log/slog"
+	"net/http"
 	"reference-service-go/internal/build"
 	"reference-service-go/internal/config"
+	"reference-service-go/internal/domain"
+	"reference-service-go/internal/outgoing/http/pokeapi"
+	"reference-service-go/internal/outgoing/postgres"
+	"reference-service-go/internal/service"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/monkescience/vital"
 
 	importsapi "reference-service-go/internal/incoming/http/imports"
+	pokemonapi "reference-service-go/internal/incoming/http/pokemon"
 )
 
 const (
@@ -40,36 +48,50 @@ func setupLogger(cfg *config.Config) *slog.Logger {
 	return logger
 }
 
-func setupRouter(logger *slog.Logger) *chi.Mux {
-	router := chi.NewRouter()
-
-	router.Use(vital.Recovery(logger))
-	router.Use(vital.RequestLogger(logger))
-
-	importHandler := importsapi.NewImportHandler(logger)
-	importsapi.HandlerFromMux(importHandler, router)
-
-	healthHandler := vital.NewHealthHandler(
-		vital.WithVersion(build.Version),
-	)
-	router.Mount("/health", healthHandler)
-
-	return router
+func main() {
+	err := run()
+	if err != nil {
+		log.Fatalf("server error: %v", err)
+	}
 }
 
-func main() {
+func run() error {
 	configPath := flag.String("config", "/config/config.yaml", "Path to the configuration file")
 
 	flag.Parse()
 
 	cfg, err := config.Load(*configPath)
 	if err != nil {
-		log.Fatalf("failed to load config: %v", err)
+		return fmt.Errorf("loading config: %w", err)
 	}
 
 	logger := setupLogger(cfg)
 
-	router := setupRouter(logger)
+	ctx := context.Background()
+
+	pool, err := postgres.Connect(ctx, cfg.Database.URL)
+	if err != nil {
+		return fmt.Errorf("connecting to database: %w", err)
+	}
+
+	defer pool.Close()
+
+	queries := postgres.New(pool)
+
+	pokeapiClient, err := pokeapi.NewFetcher(
+		&http.Client{Timeout: cfg.PokeAPI.Timeout},
+		cfg.PokeAPI.BaseURL,
+	)
+	if err != nil {
+		return fmt.Errorf("creating pokeapi client: %w", err)
+	}
+
+	importService := service.NewImportService(logger, pokeapiClient, queries, pool, cfg.PokeAPI.Concurrency)
+
+	defer importService.Shutdown()
+
+	gachaService := service.NewGachaService(logger, queries, domain.DefaultRand{})
+	router := setupRouter(logger, importService, gachaService, queries)
 
 	server := vital.NewServer(
 		router,
@@ -83,6 +105,32 @@ func main() {
 
 	err = server.Run()
 	if err != nil {
-		log.Fatalf("server error: %v", err)
+		return fmt.Errorf("running server: %w", err)
 	}
+
+	return nil
+}
+
+func setupRouter(
+	logger *slog.Logger,
+	importService *service.ImportService,
+	gachaService *service.GachaService,
+	queries *postgres.Queries,
+) chi.Router {
+	router := chi.NewRouter()
+	router.Use(vital.Recovery(logger))
+	router.Use(vital.RequestLogger(logger))
+
+	importHandler := importsapi.NewImportHandler(logger, importService)
+	importsapi.HandlerFromMux(importHandler, router)
+
+	pokemonHandler := pokemonapi.NewPokemonHandler(logger, gachaService, queries)
+	pokemonapi.HandlerFromMux(pokemonHandler, router)
+
+	healthHandler := vital.NewHealthHandler(
+		vital.WithVersion(build.Version),
+	)
+	router.Mount("/health", healthHandler)
+
+	return router
 }

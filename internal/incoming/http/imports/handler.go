@@ -1,30 +1,37 @@
 package importsapi
 
 import (
-	"crypto/rand"
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
-	"sync"
-	"time"
+	"reference-service-go/internal/domain"
+	"strings"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/monkescience/vital"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
+// Importer defines the operations the import handler needs.
+type Importer interface {
+	CreateImport(ctx context.Context, source string) (*domain.Import, error)
+	GetImport(ctx context.Context, id string) (*domain.Import, error)
+}
+
 // ImportHandler handles import API requests.
 type ImportHandler struct {
-	logger  *slog.Logger
-	mu      sync.Mutex
-	imports map[string]ImportResponse
+	logger   *slog.Logger
+	importer Importer
 }
 
 // NewImportHandler creates a new import handler.
-func NewImportHandler(logger *slog.Logger) *ImportHandler {
+func NewImportHandler(logger *slog.Logger, importer Importer) *ImportHandler {
 	return &ImportHandler{
-		logger:  logger,
-		imports: make(map[string]ImportResponse),
+		logger:   logger,
+		importer: importer,
 	}
 }
 
@@ -45,24 +52,25 @@ func (h *ImportHandler) CreateImport(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	now := time.Now()
-	id := newUUID()
+	imp, err := h.importer.CreateImport(r.Context(), req.Source)
+	if err != nil {
+		h.logger.ErrorContext(r.Context(), "failed to create import", slog.Any("error", err))
+		vital.RespondProblem(r.Context(), w, vital.InternalServerError("failed to create import"))
 
-	resp := ImportResponse{
-		Id:        id,
-		Source:    req.Source,
-		Status:    Pending,
-		ItemCount: 0,
-		CreatedAt: now,
-		UpdatedAt: now,
+		return
 	}
 
-	h.mu.Lock()
-	h.imports[id.String()] = resp
-	h.mu.Unlock()
+	resp := ImportResponse{
+		Id:        openapi_types.UUID(parseUUIDBytes(imp.ID)),
+		Source:    imp.Source,
+		Status:    ImportResponseStatus(imp.Status),
+		ItemCount: imp.ItemCount,
+		CreatedAt: imp.CreatedAt,
+		UpdatedAt: imp.UpdatedAt,
+	}
 
 	h.logger.InfoContext(r.Context(), "import created",
-		slog.String("id", id.String()),
+		slog.String("id", imp.ID),
 		slog.String("source", req.Source),
 	)
 
@@ -77,42 +85,55 @@ func (h *ImportHandler) CreateImport(w http.ResponseWriter, r *http.Request) {
 
 // GetImport returns the status of an import by ID.
 func (h *ImportHandler) GetImport(w http.ResponseWriter, r *http.Request, importID openapi_types.UUID) {
-	h.mu.Lock()
-	resp, ok := h.imports[importID.String()]
-	h.mu.Unlock()
+	imp, err := h.importer.GetImport(r.Context(), importID.String())
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			vital.RespondProblem(r.Context(), w, vital.NotFound(
+				fmt.Sprintf("import %s not found", importID),
+			))
 
-	if !ok {
-		vital.RespondProblem(r.Context(), w, vital.NotFound(
-			fmt.Sprintf("import %s not found", importID),
-		))
+			return
+		}
+
+		h.logger.ErrorContext(r.Context(), "failed to get import", slog.Any("error", err))
+		vital.RespondProblem(r.Context(), w, vital.InternalServerError("failed to get import"))
 
 		return
 	}
 
+	resp := ImportResponse{
+		Id:        openapi_types.UUID(parseUUIDBytes(imp.ID)),
+		Source:    imp.Source,
+		Status:    ImportResponseStatus(imp.Status),
+		ItemCount: imp.ItemCount,
+		CreatedAt: imp.CreatedAt,
+		UpdatedAt: imp.UpdatedAt,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 
-	err := json.NewEncoder(w).Encode(resp)
+	err = json.NewEncoder(w).Encode(resp)
 	if err != nil {
 		h.logger.ErrorContext(r.Context(), "failed to encode response", slog.Any("error", err))
 	}
 }
 
-// UUID v4 bit masks per RFC 4122.
-const (
-	uuidVersion4Mask   = 0x0f
-	uuidVersion4       = 0x40
-	uuidVariantMask    = 0x3f
-	uuidVariantRFC4122 = 0x80
-)
-
-// newUUID generates a new random UUID v4.
-func newUUID() openapi_types.UUID {
+func parseUUIDBytes(s string) [16]byte {
 	var id [16]byte
 
-	_, _ = rand.Read(id[:])
+	var b strings.Builder
 
-	id[6] = (id[6] & uuidVersion4Mask) | uuidVersion4
-	id[8] = (id[8] & uuidVariantMask) | uuidVariantRFC4122
+	for _, c := range s {
+		if c != '-' {
+			b.WriteRune(c)
+		}
+	}
+
+	clean := b.String()
+
+	for i := 0; i < len(id) && i*2+1 < len(clean); i++ {
+		_, _ = fmt.Sscanf(clean[i*2:i*2+2], "%02x", &id[i])
+	}
 
 	return id
 }

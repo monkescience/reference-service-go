@@ -6,3 +6,13 @@ log_config:
   format: "text"
   # Include source file and line number in logs
   add_source: false
+
+# PostgreSQL database connection
+database:
+  url: "postgres://postgres:postgres@localhost:5432/pokemon?sslmode=disable"
+
+# PokeAPI client configuration
+pokeapi:
+  base_url: "https://pokeapi.co/api/v2"
+  timeout: "30s"
+  concurrency: 10

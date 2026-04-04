@@ -1,0 +1,6 @@
+package: pokemonapi
+generate:
+  models: true
+  chi-server: true
+  embedded-spec: true
+output: ../internal/incoming/http/pokemon/server.gen.go

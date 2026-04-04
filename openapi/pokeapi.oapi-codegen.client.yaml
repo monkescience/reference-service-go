@@ -1,0 +1,5 @@
+package: pokeapi
+generate:
+  models: true
+  client: true
+output: ../internal/outgoing/http/pokeapi/client.gen.go

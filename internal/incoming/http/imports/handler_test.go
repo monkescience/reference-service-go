@@ -2,23 +2,93 @@ package importsapi_test
 
 import (
 	"context"
+	"crypto/rand"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"reference-service-go/internal/domain"
 	"strings"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/jackc/pgx/v5"
 	"github.com/monkescience/testastic"
 
 	importsapi "reference-service-go/internal/incoming/http/imports"
 )
 
+type fakeImporter struct {
+	mu      sync.Mutex
+	imports map[string]*domain.Import
+}
+
+func newFakeImporter() *fakeImporter {
+	return &fakeImporter{
+		imports: make(map[string]*domain.Import),
+	}
+}
+
+func (f *fakeImporter) CreateImport(_ context.Context, source string) (*domain.Import, error) {
+	now := time.Now()
+	id := generateID()
+
+	imp := &domain.Import{
+		ID:        id,
+		Source:    source,
+		Status:    domain.ImportStatusPending,
+		ItemCount: 0,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+
+	f.mu.Lock()
+	f.imports[id] = imp
+	f.mu.Unlock()
+
+	return imp, nil
+}
+
+func (f *fakeImporter) GetImport(_ context.Context, id string) (*domain.Import, error) {
+	f.mu.Lock()
+	imp, ok := f.imports[id]
+	f.mu.Unlock()
+
+	if !ok {
+		return nil, pgx.ErrNoRows
+	}
+
+	return imp, nil
+}
+
+const (
+	uuidSize        = 16
+	uuidVersionByte = 6
+	uuidVariantByte = 8
+	uuidVersion4    = 0x40
+	uuidVersion4Msk = 0x0f
+	uuidVariant     = 0x80
+	uuidVariantMsk  = 0x3f
+)
+
+func generateID() string {
+	var id [uuidSize]byte
+
+	_, _ = rand.Read(id[:])
+
+	id[uuidVersionByte] = (id[uuidVersionByte] & uuidVersion4Msk) | uuidVersion4
+	id[uuidVariantByte] = (id[uuidVariantByte] & uuidVariantMsk) | uuidVariant
+
+	return fmt.Sprintf("%x-%x-%x-%x-%x", id[0:4], id[4:6], id[6:8], id[8:10], id[10:16])
+}
+
 func newTestRouter() http.Handler {
 	logger := slog.Default()
-	handler := importsapi.NewImportHandler(logger)
+	handler := importsapi.NewImportHandler(logger, newFakeImporter())
 	router := chi.NewRouter()
 	importsapi.HandlerFromMux(handler, router)
 

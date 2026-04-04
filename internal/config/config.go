@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
@@ -15,6 +16,21 @@ type Config struct {
 		Format    string `yaml:"format"`     // Log format (json, text)
 		AddSource bool   `yaml:"add_source"` // Include source file and line number
 	} `yaml:"log_config"`
+
+	Database DatabaseConfig `yaml:"database"`
+	PokeAPI  PokeAPIConfig  `yaml:"pokeapi"`
+}
+
+// DatabaseConfig holds PostgreSQL connection settings.
+type DatabaseConfig struct {
+	URL string `yaml:"url"`
+}
+
+// PokeAPIConfig holds settings for the PokeAPI client.
+type PokeAPIConfig struct {
+	BaseURL     string        `yaml:"base_url"`
+	Timeout     time.Duration `yaml:"timeout"`
+	Concurrency int           `yaml:"concurrency"`
 }
 
 // Load reads configuration from the specified YAML file.
