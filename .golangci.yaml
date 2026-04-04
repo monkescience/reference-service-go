@@ -29,6 +29,11 @@ linters:
           - gocognit
           - gosec
 
+      # Disable magic number lint in test helpers (fixtures, seeding, etc.)
+      - path: internal/testutil/
+        linters:
+          - mnd
+
   default: none
   enable:
     # Core (must have)

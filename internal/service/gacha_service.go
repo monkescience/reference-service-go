@@ -8,6 +8,8 @@ import (
 	"reference-service-go/internal/domain"
 	"reference-service-go/internal/outgoing/postgres"
 	"time"
+
+	"github.com/jackc/pgx/v5"
 )
 
 // ErrNoPokemonImported is returned when no Pokemon have been imported yet.
@@ -35,6 +37,10 @@ func (s *GachaService) OpenPokeball(ctx context.Context, ballType domain.Pokebal
 
 	row, err := s.queries.GetRandomPokemonByRarity(ctx, string(rarity))
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNoPokemonImported
+		}
+
 		return nil, fmt.Errorf("getting random pokemon: %w", err)
 	}
 

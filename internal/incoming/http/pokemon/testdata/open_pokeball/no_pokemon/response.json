@@ -1,0 +1,5 @@
+{
+  "title": "No Pokemon Imported",
+  "status": 409,
+  "detail": "no pokemon have been imported yet, run an import first"
+}
