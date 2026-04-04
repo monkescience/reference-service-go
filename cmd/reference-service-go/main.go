@@ -57,6 +57,7 @@ func main() {
 
 func run() error {
 	configPath := flag.String("config", "/config/config.yaml", "Path to the configuration file")
+	migrateOnly := flag.Bool("migrate-only", false, "Run database migrations and exit")
 
 	flag.Parse()
 
@@ -65,6 +66,19 @@ func run() error {
 		return fmt.Errorf("loading config: %w", err)
 	}
 
+	if *migrateOnly {
+		err = postgres.RunMigrations(cfg.Database.URL)
+		if err != nil {
+			return fmt.Errorf("running migrations: %w", err)
+		}
+
+		return nil
+	}
+
+	return runServer(cfg)
+}
+
+func runServer(cfg *config.Config) error {
 	logger := setupLogger(cfg)
 
 	ctx := context.Background()

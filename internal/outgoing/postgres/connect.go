@@ -12,7 +12,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib" // PostgreSQL driver registration for goose.
 )
 
-// Connect creates a pgx connection pool and runs migrations.
+// Connect creates a pgx connection pool.
 func Connect(ctx context.Context, databaseURL string) (*pgxpool.Pool, error) {
 	pool, err := pgxpool.New(ctx, databaseURL)
 	if err != nil {
@@ -24,15 +24,11 @@ func Connect(ctx context.Context, databaseURL string) (*pgxpool.Pool, error) {
 		return nil, fmt.Errorf("pinging database: %w", err)
 	}
 
-	err = runMigrations(databaseURL)
-	if err != nil {
-		return nil, fmt.Errorf("running migrations: %w", err)
-	}
-
 	return pool, nil
 }
 
-func runMigrations(databaseURL string) error {
+// RunMigrations applies all pending database migrations using goose.
+func RunMigrations(databaseURL string) error {
 	db, err := sql.Open("pgx", databaseURL)
 	if err != nil {
 		return fmt.Errorf("opening migration connection: %w", err)

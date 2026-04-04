@@ -49,6 +49,11 @@ func StartPostgres(ctx context.Context) (*PostgresContainer, error) {
 
 // SetupDatabase connects to the testcontainer and runs migrations.
 func SetupDatabase(ctx context.Context, databaseURL string) (*pgxpool.Pool, *postgres.Queries, error) {
+	err := postgres.RunMigrations(databaseURL)
+	if err != nil {
+		return nil, nil, fmt.Errorf("running test migrations: %w", err)
+	}
+
 	pool, err := postgres.Connect(ctx, databaseURL)
 	if err != nil {
 		return nil, nil, fmt.Errorf("connecting to test database: %w", err)
