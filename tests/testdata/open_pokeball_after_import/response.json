@@ -1,0 +1,20 @@
+{
+  "pokemon": {
+    "id": "{{anyInt}}",
+    "name": "{{anyString}}",
+    "rarity": "{{oneOf \"common\" \"uncommon\" \"rare\" \"legendary\" \"mythical\"}}",
+    "types": "{{anyValue}}",
+    "sprite_url": "{{anyURL}}",
+    "stats": {
+      "hp": "{{anyInt}}",
+      "attack": "{{anyInt}}",
+      "defense": "{{anyInt}}",
+      "special_attack": "{{anyInt}}",
+      "special_defense": "{{anyInt}}",
+      "speed": "{{anyInt}}"
+    }
+  },
+  "pokeball_type": "pokeball",
+  "is_shiny": "{{anyBool}}",
+  "caught_at": "{{anyDateTime}}"
+}

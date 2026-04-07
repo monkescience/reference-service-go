@@ -1,16 +1,18 @@
-package testutil
+//go:build integration
+
+package tests_test
 
 import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"sync"
 	"testing"
 )
 
-// PokeAPIMock is an httptest server that serves canned PokeAPI responses.
-type PokeAPIMock struct {
-	Server *httptest.Server
+type pokeAPIMock struct {
+	server *httptest.Server
 
 	mu               sync.RWMutex
 	speciesCount     int
@@ -18,13 +20,18 @@ type PokeAPIMock struct {
 	speciesResponses map[string]string
 }
 
-// NewPokeAPIMock creates a mock PokeAPI server.
-func NewPokeAPIMock(t *testing.T) *PokeAPIMock {
+type pokeAPIMockOption func(t *testing.T, mock *pokeAPIMock)
+
+func newPokeAPIMock(t *testing.T, opts ...pokeAPIMockOption) *pokeAPIMock {
 	t.Helper()
 
-	mock := &PokeAPIMock{
+	mock := &pokeAPIMock{
 		pokemonResponses: make(map[string]string),
 		speciesResponses: make(map[string]string),
+	}
+
+	for _, opt := range opts {
+		opt(t, mock)
 	}
 
 	mux := http.NewServeMux()
@@ -72,23 +79,37 @@ func NewPokeAPIMock(t *testing.T) *PokeAPIMock {
 		_, _ = fmt.Fprint(w, body)
 	})
 
-	mock.Server = httptest.NewServer(mux)
-	t.Cleanup(mock.Server.Close)
+	mock.server = httptest.NewServer(mux)
+	t.Cleanup(mock.server.Close)
 
 	return mock
 }
 
-// SetSpeciesCount sets the count returned by GET /pokemon-species.
-func (m *PokeAPIMock) SetSpeciesCount(count int) {
-	m.mu.Lock()
-	m.speciesCount = count
-	m.mu.Unlock()
+func withSpeciesCount(count int) pokeAPIMockOption {
+	return func(_ *testing.T, mock *pokeAPIMock) {
+		mock.mu.Lock()
+		mock.speciesCount = count
+		mock.mu.Unlock()
+	}
 }
 
-// AddPokemon registers canned responses for a Pokemon by ID.
-func (m *PokeAPIMock) AddPokemon(id string, pokemonJSON string, speciesJSON string) {
-	m.mu.Lock()
-	m.pokemonResponses[id] = pokemonJSON
-	m.speciesResponses[id] = speciesJSON
-	m.mu.Unlock()
+func withPokemonFixture(id string, pokemonFile string, speciesFile string) pokeAPIMockOption {
+	return func(t *testing.T, mock *pokeAPIMock) {
+		t.Helper()
+
+		pokemonJSON, err := os.ReadFile(pokemonFile)
+		if err != nil {
+			t.Fatalf("reading pokemon fixture %s: %v", pokemonFile, err)
+		}
+
+		speciesJSON, err := os.ReadFile(speciesFile)
+		if err != nil {
+			t.Fatalf("reading species fixture %s: %v", speciesFile, err)
+		}
+
+		mock.mu.Lock()
+		mock.pokemonResponses[id] = string(pokemonJSON)
+		mock.speciesResponses[id] = string(speciesJSON)
+		mock.mu.Unlock()
+	}
 }

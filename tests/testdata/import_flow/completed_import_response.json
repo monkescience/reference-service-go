@@ -1,0 +1,8 @@
+{
+  "id": "{{anyUUID}}",
+  "source": "pokeapi",
+  "status": "completed",
+  "item_count": 2,
+  "created_at": "{{anyDateTime}}",
+  "updated_at": "{{anyDateTime}}"
+}

@@ -119,11 +119,7 @@ func loadFixture(t *testing.T, path string) string {
 }
 
 func TestCreateImport(t *testing.T) {
-	t.Parallel()
-
 	t.Run("returns 201 with valid source", func(t *testing.T) {
-		t.Parallel()
-
 		// given: a POST /imports request with a valid source field
 		router := newTestRouter()
 		req := newRequest(http.MethodPost, "/imports", loadFixture(t, "testdata/create_import/valid_source/request.json"))
@@ -139,8 +135,6 @@ func TestCreateImport(t *testing.T) {
 	})
 
 	t.Run("returns 400 with empty body", func(t *testing.T) {
-		t.Parallel()
-
 		// given: a POST /imports request with an empty body
 		router := newTestRouter()
 		req := newRequest(http.MethodPost, "/imports", "")
@@ -155,8 +149,6 @@ func TestCreateImport(t *testing.T) {
 	})
 
 	t.Run("returns 400 with missing source", func(t *testing.T) {
-		t.Parallel()
-
 		// given: a POST /imports request with an empty JSON object (missing required source)
 		router := newTestRouter()
 		req := newRequest(http.MethodPost, "/imports", loadFixture(t, "testdata/create_import/missing_source/request.json"))
@@ -172,11 +164,7 @@ func TestCreateImport(t *testing.T) {
 }
 
 func TestGetImport(t *testing.T) {
-	t.Parallel()
-
 	t.Run("returns 200 for existing import", func(t *testing.T) {
-		t.Parallel()
-
 		// given: a previously created import via POST /imports
 		router := newTestRouter()
 
@@ -201,8 +189,6 @@ func TestGetImport(t *testing.T) {
 	})
 
 	t.Run("returns 404 for non-existent import", func(t *testing.T) {
-		t.Parallel()
-
 		// given: a GET /imports/{id} request with a non-existent UUID
 		router := newTestRouter()
 		req := newRequest(http.MethodGet, "/imports/550e8400-e29b-41d4-a716-446655440000", "")
