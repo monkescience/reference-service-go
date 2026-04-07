@@ -17,8 +17,14 @@ type Config struct {
 		AddSource bool   `yaml:"add_source"` // Include source file and line number
 	} `yaml:"log_config"`
 
+	Server   ServerConfig   `yaml:"server"`
 	Database DatabaseConfig `yaml:"database"`
 	PokeAPI  PokeAPIConfig  `yaml:"pokeapi"`
+}
+
+// ServerConfig holds HTTP server settings.
+type ServerConfig struct {
+	Port int `yaml:"port"`
 }
 
 // DatabaseConfig holds PostgreSQL connection settings.

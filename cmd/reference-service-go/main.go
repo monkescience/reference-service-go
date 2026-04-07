@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	serverPort         = 8080
+	defaultServerPort  = 8080
 	serverReadTimeout  = 10 * time.Second
 	serverWriteTimeout = 10 * time.Second
 	serverIdleTimeout  = 120 * time.Second
@@ -107,9 +107,14 @@ func runServer(cfg *config.Config) error {
 	gachaService := service.NewGachaService(logger, queries, domain.DefaultRand{})
 	router := setupRouter(logger, importService, gachaService, queries)
 
+	port := cfg.Server.Port
+	if port == 0 {
+		port = defaultServerPort
+	}
+
 	server := vital.NewServer(
 		router,
-		vital.WithPort(serverPort),
+		vital.WithPort(port),
 		vital.WithReadTimeout(serverReadTimeout),
 		vital.WithWriteTimeout(serverWriteTimeout),
 		vital.WithIdleTimeout(serverIdleTimeout),

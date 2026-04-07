@@ -5,7 +5,7 @@ BUILD_DIR := ./bin
 CHART_PATH := ./chart
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 
-.PHONY: build run generate test test-integration coverage fmt lint clean docker-build helm-lint help
+.PHONY: build run generate test coverage fmt lint clean docker-build helm-lint help
 
 .DEFAULT_GOAL := help
 
@@ -22,15 +22,12 @@ run: ## Run the application locally
 generate: ## Run go generate to generate code from OpenAPI specs
 	go generate ./...
 
-test: ## Run unit tests with race detection
-	go test -v -race -short ./...
-
-test-integration: ## Run all tests including integration (requires Docker)
-	TESTCONTAINERS_RYUK_DISABLED=true go test -v -race ./...
+test: ## Run all tests with race detection (requires Docker)
+	TESTCONTAINERS_RYUK_DISABLED=true go test -v -race -tags integration ./...
 
 coverage: ## Run tests with coverage report (requires Docker)
 	@mkdir -p $(BUILD_DIR)
-	TESTCONTAINERS_RYUK_DISABLED=true go test -v -race -coverprofile=$(BUILD_DIR)/coverage.out -covermode=atomic ./...
+	TESTCONTAINERS_RYUK_DISABLED=true go test -v -race -tags integration -coverprofile=$(BUILD_DIR)/coverage.out -covermode=atomic ./...
 	go tool cover -html=$(BUILD_DIR)/coverage.out -o $(BUILD_DIR)/coverage.html
 
 fmt: ## Format Go code
