@@ -10,6 +10,7 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"testing"
 	"time"
 
@@ -62,7 +63,7 @@ func TestMain(m *testing.M) {
 
 	defer testPool.Close()
 
-	os.Exit(testastic.CollectProcessCoverage(m, "coverage-e2e.txt"))
+	os.Exit(testastic.CollectProcessCoverage(m, filepath.Join("..", "bin", "coverage.out")))
 }
 
 func startPostgres(ctx context.Context) (*tcpostgres.PostgresContainer, error) {

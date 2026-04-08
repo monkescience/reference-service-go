@@ -4,6 +4,8 @@ BINARY_NAME := reference-service-go
 BUILD_DIR := ./bin
 CHART_PATH := ./chart
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+COVERAGE_PROFILE := $(BUILD_DIR)/coverage.out
+COVERAGE_HTML := $(BUILD_DIR)/coverage.html
 
 .PHONY: build run generate test coverage fmt lint clean docker-build helm-lint help
 
@@ -25,10 +27,11 @@ generate: ## Run go generate to generate code from OpenAPI specs
 test: ## Run all tests with race detection (requires Docker)
 	TESTCONTAINERS_RYUK_DISABLED=true go test -v -race -tags integration ./...
 
-coverage: ## Run tests with coverage report (requires Docker)
+coverage: ## Run black-box coverage report (requires Docker)
 	@mkdir -p $(BUILD_DIR)
-	TESTCONTAINERS_RYUK_DISABLED=true go test -v -race -tags integration -coverprofile=$(BUILD_DIR)/coverage.out -covermode=atomic ./...
-	go tool cover -html=$(BUILD_DIR)/coverage.out -o $(BUILD_DIR)/coverage.html
+	@rm -f $(COVERAGE_PROFILE) $(COVERAGE_HTML)
+	TESTCONTAINERS_RYUK_DISABLED=true go test -v -tags integration ./tests
+	go tool cover -html=$(COVERAGE_PROFILE) -o $(COVERAGE_HTML)
 
 fmt: ## Format Go code
 	golangci-lint fmt
