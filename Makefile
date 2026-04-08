@@ -6,8 +6,10 @@ CHART_PATH := ./chart
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
 COVERAGE_PROFILE := $(BUILD_DIR)/coverage.out
 COVERAGE_HTML := $(BUILD_DIR)/coverage.html
+SPECTRAL_RULESET := openapi/spectral.ruleset.yaml
+SPECTRAL_SPECS := openapi/import-api.yaml openapi/pokemon-api.yaml
 
-.PHONY: build run generate test coverage fmt lint clean docker-build helm-lint help
+.PHONY: build run generate test coverage fmt lint spectral clean docker-build helm-lint help
 
 .DEFAULT_GOAL := help
 
@@ -38,6 +40,9 @@ fmt: ## Format Go code
 
 lint: ## Run golangci-lint
 	golangci-lint run --timeout=5m
+
+spectral: ## Lint owned OpenAPI specs with Spectral
+	spectral lint --ruleset $(SPECTRAL_RULESET) $(SPECTRAL_SPECS)
 
 clean: ## Remove build artifacts
 	rm -rf $(BUILD_DIR)

@@ -11,6 +11,18 @@ env:
   HELM_VERSION: v3.19.0 # renovate: datasource=github-releases depName=helm/helm
 
 jobs:
+  spectral:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Spectral lint
+        uses: stoplightio/spectral-action@6416fd018ae38e60136775066eb3e98172143141 # v0.8.13
+        with:
+          file_glob: openapi/{import-api,pokemon-api}.yaml
+          spectral_ruleset: openapi/spectral.ruleset.yaml
+
   helm-lint:
     runs-on: ubuntu-latest
     steps:
