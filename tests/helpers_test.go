@@ -34,17 +34,20 @@ func TestMain(m *testing.M) {
 	}
 
 	ctx := context.Background()
+	exitCode := 1
 
 	pg, err := startPostgres(ctx)
 	if err != nil {
 		log.Fatalf("starting postgres: %v", err)
 	}
 
-	defer func() {
+	cleanup := func() {
+		testPool.Close()
+
 		if termErr := pg.Terminate(ctx); termErr != nil {
 			log.Printf("terminating postgres: %v", termErr)
 		}
-	}()
+	}
 
 	postgresURL, err = pg.ConnectionString(ctx, "sslmode=disable")
 	if err != nil {
@@ -61,9 +64,10 @@ func TestMain(m *testing.M) {
 		log.Fatalf("connecting to postgres: %v", err)
 	}
 
-	defer testPool.Close()
+	exitCode = testastic.CollectProcessCoverage(m, filepath.Join("..", "bin", "coverage.out"))
+	cleanup()
 
-	os.Exit(testastic.CollectProcessCoverage(m, filepath.Join("..", "bin", "coverage.out")))
+	os.Exit(exitCode)
 }
 
 func startPostgres(ctx context.Context) (*tcpostgres.PostgresContainer, error) {
