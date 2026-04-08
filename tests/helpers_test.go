@@ -189,7 +189,7 @@ func startService(t *testing.T, pokeapiURL string) *testastic.Process {
 func truncateTables(t *testing.T) {
 	t.Helper()
 
-	_, err := testPool.Exec(context.Background(), "TRUNCATE TABLE pokemon, imports")
+	_, err := testPool.Exec(context.Background(), "TRUNCATE TABLE catches, pokemon, imports")
 	if err != nil {
 		t.Fatalf("truncating tables: %v", err)
 	}

@@ -7,7 +7,7 @@ VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev
 COVERAGE_PROFILE := $(BUILD_DIR)/coverage.out
 COVERAGE_HTML := $(BUILD_DIR)/coverage.html
 SPECTRAL_RULESET := openapi/spectral.ruleset.yaml
-SPECTRAL_SPECS := openapi/import-api.yaml openapi/pokemon-api.yaml
+SPECTRAL_SPECS := openapi/reference-api.yaml
 
 .PHONY: build run generate test coverage fmt lint spectral clean docker-build helm-lint help
 
@@ -23,8 +23,9 @@ build: ## Build the application binary
 run: ## Run the application locally
 	go run -ldflags "-X reference-service-go/internal/build.Version=$(VERSION)" ./cmd/reference-service-go -config config/config.yaml
 
-generate: ## Run go generate to generate code from OpenAPI specs
-	go generate ./...
+generate: ## Run code generation for OpenAPI specs and SQLC
+	sqlc generate
+	go generate -tags tools ./...
 
 test: ## Run all tests with race detection (requires Docker)
 	TESTCONTAINERS_RYUK_DISABLED=true go test -v -race -tags integration ./...

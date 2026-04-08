@@ -20,7 +20,7 @@ jobs:
       - name: Spectral lint
         uses: stoplightio/spectral-action@6416fd018ae38e60136775066eb3e98172143141 # v0.8.13
         with:
-          file_glob: openapi/{import-api,pokemon-api}.yaml
+          file_glob: openapi/reference-api.yaml
           spectral_ruleset: openapi/spectral.ruleset.yaml
 
   helm-lint:

@@ -29,7 +29,7 @@ func newScenarioPokeAPIMock(t *testing.T, fixtureDir string) *pokeAPIMock {
 	)
 }
 
-func newOpenPokeballAfterImportMock(t *testing.T) *pokeAPIMock {
+func newCatchAfterImportMock(t *testing.T) *pokeAPIMock {
 	t.Helper()
 
 	fixtureDir := "testdata/open_pokeball_after_import"
@@ -100,6 +100,7 @@ func TestImportFlow(t *testing.T) {
 	var importResp createdImportResponse
 
 	decodeJSON(t, body, &importResp)
+	testastic.Equal(t, "/imports/"+importResp.ID, resp.Header.Get("Location"))
 
 	// then: the import completes and imported pokemon are available through the API
 	importID := importResp.ID
@@ -192,52 +193,62 @@ func TestGetPokemonNotFound(t *testing.T) {
 	testastic.AssertJSON(t, "testdata/get_pokemon_not_found/response.json", readBody(t, resp))
 }
 
-func TestOpenPokeballNoPokemon(t *testing.T) {
+func TestCreateCatchNoPokemon(t *testing.T) {
 	// given: a running service with no imported pokemon
 	mock := newPokeAPIMock(t)
 	proc := startService(t, mock.server.URL+"/api/v2")
 
 	t.Cleanup(func() { truncateTables(t) })
 
-	// when: POST /pokeball/open is called
-	resp := doPost(t, proc.URL()+"/pokeball/open", `{"pokeball_type": "pokeball"}`)
+	// when: POST /catches is called
+	resp := doPost(t, proc.URL()+"/catches", `{"pokeball_type": "pokeball"}`)
 
 	// then: the API reports that no pokemon are available to catch
 	testastic.Equal(t, http.StatusConflict, resp.StatusCode)
-	testastic.AssertJSON(t, "testdata/open_pokeball_no_pokemon/response.json", readBody(t, resp))
+	testastic.AssertJSON(t, "testdata/create_catch_no_pokemon/response.json", readBody(t, resp))
 }
 
-func TestOpenPokeballInvalidBody(t *testing.T) {
+func TestCreateCatchInvalidBody(t *testing.T) {
 	// given: a running service
 	mock := newPokeAPIMock(t)
 	proc := startService(t, mock.server.URL+"/api/v2")
 
-	// when: POST /pokeball/open is called with an empty body
-	resp := doPost(t, proc.URL()+"/pokeball/open", "")
+	// when: POST /catches is called with an empty body
+	resp := doPost(t, proc.URL()+"/catches", "")
 
 	// then: the API returns a bad request problem response
 	testastic.Equal(t, http.StatusBadRequest, resp.StatusCode)
-	testastic.AssertJSON(t, "testdata/open_pokeball_invalid_body/response.json", readBody(t, resp))
+	testastic.AssertJSON(t, "testdata/create_catch_invalid_body/response.json", readBody(t, resp))
 }
 
-func TestOpenPokeballAfterImport(t *testing.T) {
+func TestCreateCatchAfterImport(t *testing.T) {
 	// given: a running service and a PokeAPI fake serving imported pokemon
-	mock := newOpenPokeballAfterImportMock(t)
+	mock := newCatchAfterImportMock(t)
 
 	proc := startService(t, mock.server.URL+"/api/v2")
 
 	t.Cleanup(func() { truncateTables(t) })
 	importPokemonForSetup(t, proc.URL())
 
-	// when: POST /pokeball/open is called after the import
-	resp := doPost(t, proc.URL()+"/pokeball/open", `{"pokeball_type": "pokeball"}`)
+	// when: POST /catches is called after the import
+	resp := doPost(t, proc.URL()+"/catches", `{"pokeball_type": "pokeball"}`)
 
-	// then: the API returns a valid caught pokemon response
-	testastic.Equal(t, http.StatusOK, resp.StatusCode)
-	testastic.AssertJSON(t, "testdata/open_pokeball_after_import/response.json", readBody(t, resp))
+	// then: the API creates a persisted catch and returns it
+	testastic.Equal(t, http.StatusCreated, resp.StatusCode)
+	body := readBody(t, resp)
+	testastic.AssertJSON(t, "testdata/create_catch_after_import/create_response.json", body)
+
+	var catchResp createdCatchResponse
+
+	decodeJSON(t, body, &catchResp)
+	testastic.Equal(t, "/catches/"+catchResp.ID, resp.Header.Get("Location"))
+
+	getResp := doGet(t, proc.URL()+"/catches/"+catchResp.ID)
+	testastic.Equal(t, http.StatusOK, getResp.StatusCode)
+	testastic.AssertJSON(t, "testdata/get_catch/existing/response.json", readBody(t, getResp))
 }
 
-func TestImportInvalidBody(t *testing.T) {
+func TestCreateImportInvalidBody(t *testing.T) {
 	// given: a running service
 	mock := newPokeAPIMock(t)
 	proc := startService(t, mock.server.URL+"/api/v2")
@@ -248,6 +259,19 @@ func TestImportInvalidBody(t *testing.T) {
 	// then: the API returns a bad request problem response
 	testastic.Equal(t, http.StatusBadRequest, resp.StatusCode)
 	testastic.AssertJSON(t, "testdata/import_invalid_body/response.json", readBody(t, resp))
+}
+
+func TestCreateImportUnsupportedSource(t *testing.T) {
+	// given: a running service
+	mock := newPokeAPIMock(t)
+	proc := startService(t, mock.server.URL+"/api/v2")
+
+	// when: POST /imports is called with an unsupported source
+	resp := doPost(t, proc.URL()+"/imports", `{"source": "manual"}`)
+
+	// then: the API rejects the unsupported source value
+	testastic.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	testastic.AssertJSON(t, "testdata/import_unsupported_source/response.json", readBody(t, resp))
 }
 
 func TestGetImportNotFound(t *testing.T) {
@@ -263,9 +287,26 @@ func TestGetImportNotFound(t *testing.T) {
 	testastic.AssertJSON(t, "testdata/get_import_not_found/response.json", readBody(t, resp))
 }
 
+func TestGetCatchNotFound(t *testing.T) {
+	// given: a running service with no matching catch
+	mock := newPokeAPIMock(t)
+	proc := startService(t, mock.server.URL+"/api/v2")
+
+	// when: GET /catches/{id} is called for a missing catch
+	resp := doGet(t, proc.URL()+"/catches/550e8400-e29b-41d4-a716-446655440000")
+
+	// then: the API returns a not found problem response
+	testastic.Equal(t, http.StatusNotFound, resp.StatusCode)
+	testastic.AssertJSON(t, "testdata/get_catch/not_found/response.json", readBody(t, resp))
+}
+
 // Minimal response types for workflow values needed across requests.
 
 type createdImportResponse struct {
+	ID string `json:"id"`
+}
+
+type createdCatchResponse struct {
 	ID string `json:"id"`
 }
 

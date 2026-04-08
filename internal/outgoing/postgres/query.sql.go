@@ -33,6 +33,30 @@ func (q *Queries) CountPokemonByRarity(ctx context.Context, rarity string) (int6
 	return count, err
 }
 
+const createCatch = `-- name: CreateCatch :exec
+INSERT INTO catches (id, pokemon_pokedex_id, pokeball_type, is_shiny, caught_at)
+VALUES ($1, $2, $3, $4, $5)
+`
+
+type CreateCatchParams struct {
+	ID               pgtype.UUID        `json:"id"`
+	PokemonPokedexID int32              `json:"pokemon_pokedex_id"`
+	PokeballType     string             `json:"pokeball_type"`
+	IsShiny          bool               `json:"is_shiny"`
+	CaughtAt         pgtype.Timestamptz `json:"caught_at"`
+}
+
+func (q *Queries) CreateCatch(ctx context.Context, arg CreateCatchParams) error {
+	_, err := q.db.Exec(ctx, createCatch,
+		arg.ID,
+		arg.PokemonPokedexID,
+		arg.PokeballType,
+		arg.IsShiny,
+		arg.CaughtAt,
+	)
+	return err
+}
+
 const createImport = `-- name: CreateImport :exec
 INSERT INTO imports (id, source, status, item_count, created_at, updated_at)
 VALUES ($1, $2, $3, $4, $5, $6)
@@ -57,6 +81,70 @@ func (q *Queries) CreateImport(ctx context.Context, arg CreateImportParams) erro
 		arg.UpdatedAt,
 	)
 	return err
+}
+
+const getCatch = `-- name: GetCatch :one
+SELECT catches.id, catches.pokeball_type, catches.is_shiny, catches.caught_at,
+    pokemon.pokedex_id, pokemon.name, pokemon.rarity, pokemon.types, pokemon.sprite_url,
+    pokemon.hp, pokemon.attack, pokemon.defense, pokemon.special_attack, pokemon.special_defense, pokemon.speed,
+    pokemon.base_experience, pokemon.capture_rate, pokemon.is_legendary, pokemon.is_mythical,
+    pokemon.created_at, pokemon.updated_at
+FROM catches
+JOIN pokemon ON pokemon.pokedex_id = catches.pokemon_pokedex_id
+WHERE catches.id = $1
+`
+
+type GetCatchRow struct {
+	ID             pgtype.UUID        `json:"id"`
+	PokeballType   string             `json:"pokeball_type"`
+	IsShiny        bool               `json:"is_shiny"`
+	CaughtAt       pgtype.Timestamptz `json:"caught_at"`
+	PokedexID      int32              `json:"pokedex_id"`
+	Name           string             `json:"name"`
+	Rarity         string             `json:"rarity"`
+	Types          []string           `json:"types"`
+	SpriteUrl      string             `json:"sprite_url"`
+	Hp             int32              `json:"hp"`
+	Attack         int32              `json:"attack"`
+	Defense        int32              `json:"defense"`
+	SpecialAttack  int32              `json:"special_attack"`
+	SpecialDefense int32              `json:"special_defense"`
+	Speed          int32              `json:"speed"`
+	BaseExperience int32              `json:"base_experience"`
+	CaptureRate    int32              `json:"capture_rate"`
+	IsLegendary    bool               `json:"is_legendary"`
+	IsMythical     bool               `json:"is_mythical"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) GetCatch(ctx context.Context, id pgtype.UUID) (GetCatchRow, error) {
+	row := q.db.QueryRow(ctx, getCatch, id)
+	var i GetCatchRow
+	err := row.Scan(
+		&i.ID,
+		&i.PokeballType,
+		&i.IsShiny,
+		&i.CaughtAt,
+		&i.PokedexID,
+		&i.Name,
+		&i.Rarity,
+		&i.Types,
+		&i.SpriteUrl,
+		&i.Hp,
+		&i.Attack,
+		&i.Defense,
+		&i.SpecialAttack,
+		&i.SpecialDefense,
+		&i.Speed,
+		&i.BaseExperience,
+		&i.CaptureRate,
+		&i.IsLegendary,
+		&i.IsMythical,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const getImport = `-- name: GetImport :one

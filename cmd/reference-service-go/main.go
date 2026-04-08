@@ -10,6 +10,7 @@ import (
 	"reference-service-go/internal/build"
 	"reference-service-go/internal/config"
 	"reference-service-go/internal/domain"
+	"reference-service-go/internal/incoming/http/referenceapi"
 	"reference-service-go/internal/outgoing/http/pokeapi"
 	"reference-service-go/internal/outgoing/postgres"
 	"reference-service-go/internal/service"
@@ -17,9 +18,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/monkescience/vital"
-
-	importsapi "reference-service-go/internal/incoming/http/imports"
-	pokemonapi "reference-service-go/internal/incoming/http/pokemon"
 )
 
 const (
@@ -140,11 +138,8 @@ func setupRouter(
 	router.Use(vital.Recovery(logger))
 	router.Use(vital.RequestLogger(logger))
 
-	importHandler := importsapi.NewImportHandler(logger, importService)
-	importsapi.HandlerFromMux(importHandler, router)
-
-	pokemonHandler := pokemonapi.NewPokemonHandler(logger, gachaService, queries)
-	pokemonapi.HandlerFromMux(pokemonHandler, router)
+	handler := referenceapi.NewHandler(logger, importService, gachaService, queries)
+	referenceapi.HandlerFromMux(handler, router)
 
 	healthHandler := vital.NewHealthHandler(
 		vital.WithVersion(build.Version),

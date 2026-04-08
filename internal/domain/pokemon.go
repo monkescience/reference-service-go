@@ -46,6 +46,7 @@ type Pokemon struct {
 
 // Catch represents the result of opening a Pokeball.
 type Catch struct {
+	ID           string
 	Pokemon      Pokemon
 	PokeballType PokeballType
 	IsShiny      bool

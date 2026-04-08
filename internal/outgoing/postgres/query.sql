@@ -77,3 +77,17 @@ WHERE id = $1;
 UPDATE imports
 SET status = $2, item_count = $3, updated_at = NOW()
 WHERE id = $1;
+
+-- name: CreateCatch :exec
+INSERT INTO catches (id, pokemon_pokedex_id, pokeball_type, is_shiny, caught_at)
+VALUES ($1, $2, $3, $4, $5);
+
+-- name: GetCatch :one
+SELECT catches.id, catches.pokeball_type, catches.is_shiny, catches.caught_at,
+    pokemon.pokedex_id, pokemon.name, pokemon.rarity, pokemon.types, pokemon.sprite_url,
+    pokemon.hp, pokemon.attack, pokemon.defense, pokemon.special_attack, pokemon.special_defense, pokemon.speed,
+    pokemon.base_experience, pokemon.capture_rate, pokemon.is_legendary, pokemon.is_mythical,
+    pokemon.created_at, pokemon.updated_at
+FROM catches
+JOIN pokemon ON pokemon.pokedex_id = catches.pokemon_pokedex_id
+WHERE catches.id = $1;

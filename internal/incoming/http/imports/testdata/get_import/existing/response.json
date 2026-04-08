@@ -1,8 +1,0 @@
-{
-  "id": "{{anyUUID}}",
-  "source": "pokeapi",
-  "status": "pending",
-  "item_count": 0,
-  "created_at": "{{anyDateTime}}",
-  "updated_at": "{{anyDateTime}}"
-}

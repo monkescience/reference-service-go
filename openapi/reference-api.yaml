@@ -1,8 +1,8 @@
 openapi: "3.1.1"
 info:
   version: 0.1.0
-  title: Pokemon API
-  description: API for listing imported Pokemon and opening Pokeballs.
+  title: Reference Service API
+  description: API for importing Pokemon data, browsing imported Pokemon, and creating catches.
   contact:
     name: Reference Service maintainers
     url: https://github.com/monkescience/reference-service-go
@@ -13,32 +13,66 @@ servers:
   - url: https://staging.api.example.com
     description: Staging
 
+tags:
+  - name: imports
+  - name: pokemon
+  - name: catches
+
 paths:
-  /pokeball/open:
+  /imports:
     post:
-      operationId: open_pokeball
-      summary: Open a Pokeball to catch a random Pokemon
+      tags: [imports]
+      operationId: create_import
+      summary: Create an import job
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: "#/components/schemas/open_pokeball_request"
+              $ref: "#/components/schemas/create_import_request"
       responses:
-        "200":
-          description: Pokemon caught successfully
+        "201":
+          description: Import successfully created
+          headers:
+            Location:
+              description: Path to the created import resource
+              schema:
+                type: string
+                format: uri-reference
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/open_pokeball_response"
+                $ref: "#/components/schemas/import_response"
         "400":
           description: Invalid request
           content:
             application/problem+json:
               schema:
                 $ref: "#/components/schemas/problem_detail"
-        "409":
-          description: No Pokemon imported yet
+
+  /imports/{import_id}:
+    get:
+      tags: [imports]
+      operationId: get_import
+      summary: Get import status
+      parameters:
+        - name: import_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The unique identifier of the import
+          example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        "200":
+          description: Import details successfully returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/import_response"
+        "404":
+          description: Import not found
           content:
             application/problem+json:
               schema:
@@ -46,6 +80,7 @@ paths:
 
   /pokemon:
     get:
+      tags: [pokemon]
       operationId: list_pokemon
       summary: List imported Pokemon
       parameters:
@@ -85,6 +120,7 @@ paths:
 
   /pokemon/{pokedex_id}:
     get:
+      tags: [pokemon]
       operationId: get_pokemon
       summary: Get a Pokemon by Pokedex ID
       parameters:
@@ -109,9 +145,140 @@ paths:
               schema:
                 $ref: "#/components/schemas/problem_detail"
 
+  /catches:
+    post:
+      tags: [catches]
+      operationId: create_catch
+      summary: Create a catch by opening a Pokeball
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/create_catch_request"
+      responses:
+        "201":
+          description: Catch successfully created
+          headers:
+            Location:
+              description: Path to the created catch resource
+              schema:
+                type: string
+                format: uri-reference
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/catch_response"
+        "400":
+          description: Invalid request
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/problem_detail"
+        "409":
+          description: No Pokemon imported yet
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/problem_detail"
+
+  /catches/{catch_id}:
+    get:
+      tags: [catches]
+      operationId: get_catch
+      summary: Get a catch by ID
+      parameters:
+        - name: catch_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The unique identifier of the catch
+          example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        "200":
+          description: Catch details returned
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/catch_response"
+        "404":
+          description: Catch not found
+          content:
+            application/problem+json:
+              schema:
+                $ref: "#/components/schemas/problem_detail"
+
 components:
   schemas:
-    open_pokeball_request:
+    create_import_request:
+      type: object
+      additionalProperties: false
+      properties:
+        source:
+          type: string
+          description: The data source to import from
+          enum:
+            - pokeapi
+          examples:
+            - "pokeapi"
+      required:
+        - source
+
+    import_response:
+      type: object
+      additionalProperties: false
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier of the import
+          examples:
+            - "550e8400-e29b-41d4-a716-446655440000"
+        source:
+          type: string
+          description: The data source being imported from
+          enum:
+            - pokeapi
+          examples:
+            - "pokeapi"
+        status:
+          type: string
+          description: Current status of the import
+          enum:
+            - pending
+            - processing
+            - completed
+            - failed
+          examples:
+            - "pending"
+        item_count:
+          type: integer
+          description: Number of items imported so far
+          examples:
+            - 0
+        created_at:
+          type: string
+          format: date-time
+          description: Timestamp when the import was created
+          examples:
+            - "2025-01-15T12:34:56Z"
+        updated_at:
+          type: string
+          format: date-time
+          description: Timestamp when the import was last updated
+          examples:
+            - "2025-01-15T12:34:56Z"
+      required:
+        - id
+        - source
+        - status
+        - item_count
+        - created_at
+        - updated_at
+
+    create_catch_request:
       type: object
       additionalProperties: false
       properties:
@@ -128,10 +295,16 @@ components:
       required:
         - pokeball_type
 
-    open_pokeball_response:
+    catch_response:
       type: object
       additionalProperties: false
       properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier of the catch
+          examples:
+            - "550e8400-e29b-41d4-a716-446655440000"
         pokemon:
           $ref: "#/components/schemas/pokemon_summary"
         pokeball_type:
@@ -155,6 +328,7 @@ components:
           examples:
             - "2026-04-04T12:00:00Z"
       required:
+        - id
         - pokemon
         - pokeball_type
         - is_shiny
@@ -294,7 +468,7 @@ components:
           type: string
           description: Human-readable explanation
           examples:
-            - "pokemon not found"
+            - "resource not found"
         instance:
           type: string
           description: URI reference identifying the specific occurrence

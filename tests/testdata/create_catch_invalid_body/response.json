@@ -1,5 +1,5 @@
 {
   "title": "Bad Request",
   "status": 400,
-  "detail": "{{anyString}}"
+  "detail": "invalid request body"
 }

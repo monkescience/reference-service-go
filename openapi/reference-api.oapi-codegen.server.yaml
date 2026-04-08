@@ -1,0 +1,6 @@
+package: referenceapi
+generate:
+  models: true
+  chi-server: true
+  embedded-spec: true
+output: ../internal/incoming/http/referenceapi/server.gen.go

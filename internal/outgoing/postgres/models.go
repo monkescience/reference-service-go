@@ -8,6 +8,14 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Catch struct {
+	ID               pgtype.UUID        `json:"id"`
+	PokemonPokedexID int32              `json:"pokemon_pokedex_id"`
+	PokeballType     string             `json:"pokeball_type"`
+	IsShiny          bool               `json:"is_shiny"`
+	CaughtAt         pgtype.Timestamptz `json:"caught_at"`
+}
+
 type Import struct {
 	ID        pgtype.UUID        `json:"id"`
 	Source    string             `json:"source"`
