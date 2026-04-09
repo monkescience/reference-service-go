@@ -184,6 +184,8 @@ github.com/monkescience/testastic v0.2.0 h1:JmXtU/aF3iTWrkiuULvYRLppxcMcFiylTzwA
 github.com/monkescience/testastic v0.2.0/go.mod h1:apmUQdDbar6r2ZdIX0Ta21qL45nk5pOWDzwvXhhILGc=
 github.com/monkescience/vital v0.3.0 h1:KvpRJFKgydwxTr3l8b5C/zLaeHL/T8mIBy7lkZIS+io=
 github.com/monkescience/vital v0.3.0/go.mod h1:Fpxlut18W/5g7brhhxfmfZ6aePZJONCvI/qxTcHQcP4=
+github.com/monkescience/vital v0.4.0 h1:0f/o3iUXw9qzC6zzF2LTnFz5bGAWasoeQT+UY6WI4Fw=
+github.com/monkescience/vital v0.4.0/go.mod h1:FYtziQMXIGdTtZiOBTGlU9GXG84KpLvFge+pfDyyld8=
 github.com/morikuni/aec v1.0.0 h1:nP9CBfwrvYnBRgY6qfDQkygYDmYwOilePFkwzv4dU8A=
 github.com/morikuni/aec v1.0.0/go.mod h1:BbKIizmSmc5MMPqRYbxO4ZU0S0+P200+tUnFx7PXmsc=
 github.com/ncruces/go-strftime v1.0.0 h1:HMFp8mLCTPp341M/ZnA4qaf7ZlsbTc+miZjCLOFAw7w=
