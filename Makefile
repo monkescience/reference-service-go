@@ -24,7 +24,6 @@ run: ## Run the application locally
 	go run -ldflags "-X reference-service-go/internal/build.Version=$(VERSION)" ./cmd/reference-service-go -config config/config.yaml
 
 generate: ## Run code generation for OpenAPI specs and SQLC
-	sqlc generate
 	go generate -tags tools ./...
 
 test: ## Run all tests with race detection (requires Docker)

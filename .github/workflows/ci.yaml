@@ -8,10 +8,71 @@ on:
   workflow_dispatch:
 
 env:
+  GOLANGCI_LINT_VERSION: v2.11.4 # renovate: datasource=github-releases depName=golangci/golangci-lint
   HELM_VERSION: v3.19.0 # renovate: datasource=github-releases depName=helm/helm
 
 jobs:
+  golangci-lint:
+    name: golangci-lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          cache: true
+          go-version-file: go.mod
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@4afd733a84b1f43292c63897423277bb7f4313a9 # v8
+        with:
+          version: ${{ env.GOLANGCI_LINT_VERSION }}
+          args: --timeout=5m
+
+  go-test-integration:
+    name: go test (integration)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          cache: true
+          go-version-file: go.mod
+
+      - name: Run integration tests
+        run: make test
+
+  go-generate-drift:
+    name: go generate (drift)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v6
+        with:
+          cache: true
+          go-version-file: go.mod
+
+      - name: Regenerate code
+        run: make generate
+
+      - name: Check generated code drift
+        run: |
+          if [ -n "$(git status --porcelain)" ]; then
+            git status --short
+            git --no-pager diff --stat
+            exit 1
+          fi
+
   spectral:
+    name: spectral
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -24,6 +85,7 @@ jobs:
           spectral_ruleset: openapi/spectral.ruleset.yaml
 
   helm-lint:
+    name: helm lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -37,3 +99,13 @@ jobs:
       - name: Helm lint
         run: |
           helm lint chart --strict
+
+  docker-build:
+    name: docker build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Build Docker image
+        run: make docker-build VERSION=ci
