@@ -1,5 +1,17 @@
 # Changelog
 
+## [v0.8.1](https://github.com/monkescience/reference-service-go/compare/v0.8.0...v0.8.1) (2026-04-09)
+
+### Bug Fixes
+
+- **generate:** align oapi-codegen toolchain dependencies ([de90c10](https://github.com/monkescience/reference-service-go/commit/de90c107ad7338f96aa65f22c6ad514eb93f2f34))
+- **deps:** update module github.com/oapi-codegen/runtime to v1.4.0 (#76) ([ac9012d](https://github.com/monkescience/reference-service-go/commit/ac9012d2659930984148deec33bb8f235aa8f537))
+- **deps:** update module github.com/monkescience/vital to v0.4.0 (#74) ([2370a1c](https://github.com/monkescience/reference-service-go/commit/2370a1c7b622956243be2ea338d1e8a52eafcf6c))
+- **deps:** update module github.com/getkin/kin-openapi to v0.135.0 (#84) ([b26b6c1](https://github.com/monkescience/reference-service-go/commit/b26b6c15a86d119abeeac8f73c61c1f008150989))
+- **deps:** update module github.com/oapi-codegen/oapi-codegen/v2 to v2.6.0 (#75) ([3328793](https://github.com/monkescience/reference-service-go/commit/3328793c3ae58d6ff66dc964cc63c70c53c0f66a))
+- **deps:** update module github.com/getkin/kin-openapi to v0.134.0 (#73) ([e721a36](https://github.com/monkescience/reference-service-go/commit/e721a365fd36f547f6aa219b3a35fd00bbe0eaa4))
+- **chart:** separate image tags from chart metadata ([ddab73c](https://github.com/monkescience/reference-service-go/commit/ddab73c85048865aa33fb0734c852efe6575ba16))
+
 ## [v0.8.0](https://github.com/monkescience/reference-service-go/compare/0.7.0...v0.8.0) (2026-04-09)
 
 ### ⚠ BREAKING CHANGES
