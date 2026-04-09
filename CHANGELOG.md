@@ -1,5 +1,22 @@
 # Changelog
 
+## [v0.8.0](https://github.com/monkescience/reference-service-go/compare/0.7.0...v0.8.0) (2026-04-09)
+
+### ⚠ BREAKING CHANGES
+
+- **api:** consolidate reference API and persist catches ([73a934c](https://github.com/monkescience/reference-service-go/commit/73a934c1ad1be555525eefa003d02ece44a70a36))
+### Features
+
+- **api:** consolidate reference API and persist catches ([73a934c](https://github.com/monkescience/reference-service-go/commit/73a934c1ad1be555525eefa003d02ece44a70a36))
+- **config:** add server port config and align test tooling ([29d16b0](https://github.com/monkescience/reference-service-go/commit/29d16b048f576a05b831f158dd6b29f0fc699129))
+- decouple migrations from service startup for K8s PreSync hook ([581f8ca](https://github.com/monkescience/reference-service-go/commit/581f8caae7bb86e15dc05db1e3b43124db41c409))
+- add PokeAPI import, Pokeball gacha, and PostgreSQL persistence ([896cf65](https://github.com/monkescience/reference-service-go/commit/896cf65cbd8cfd16592cc026d8ac042e0959f80a))
+- add Pokemon import API with OpenAPI-first design ([3c9dda6](https://github.com/monkescience/reference-service-go/commit/3c9dda6e780a33adfc3b4594a93a3584ff59c3d6))
+- **ci:** migrate from release-please to yeet ([2f87154](https://github.com/monkescience/reference-service-go/commit/2f87154627f72fa20bcd3735120b88f17baee66b))
+### Bug Fixes
+
+- **tests:** clean up postgres before TestMain exit ([30cee5e](https://github.com/monkescience/reference-service-go/commit/30cee5ebc529ab1cde5c4176712c01bd984da695))
+
 ## [0.7.0](https://github.com/monkescience/reference-service-go/compare/0.6.0...0.7.0) (2025-12-12)
 
 
