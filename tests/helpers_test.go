@@ -99,6 +99,7 @@ func runMigrations(databaseURL string) error {
 
 	cmd := exec.Command(
 		"go", "run",
+		"-trimpath",
 		"-ldflags", "-X reference-service-go/internal/build.Version=test",
 		"./cmd/reference-service-go",
 		"-config", configPath, "-migrate-only",
@@ -185,7 +186,7 @@ func startService(t *testing.T, pokeapiURL string) *testastic.Process {
 		testastic.HTTPCheck(port, "/pokemon"),
 		testastic.WithPort(port),
 		testastic.WithArgs("-config", configPath),
-		testastic.WithBuildArgs("-ldflags", "-X reference-service-go/internal/build.Version=test"),
+		testastic.WithBuildArgs("-trimpath", "-ldflags", "-X reference-service-go/internal/build.Version=test"),
 		testastic.WithReadyTimeout(10*time.Second),
 	)
 }

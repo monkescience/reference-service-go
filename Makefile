@@ -4,6 +4,8 @@ BINARY_NAME := reference-service-go
 BUILD_DIR := ./bin
 CHART_PATH := ./chart
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
+GO_LDFLAGS := -X reference-service-go/internal/build.Version=$(VERSION)
+GO_BUILD_FLAGS := -trimpath -ldflags "$(GO_LDFLAGS)"
 COVERAGE_PROFILE := $(BUILD_DIR)/coverage.out
 COVERAGE_HTML := $(BUILD_DIR)/coverage.html
 SPECTRAL_RULESET := openapi/spectral.ruleset.yaml
@@ -18,10 +20,10 @@ help: ## Display this help message
 
 build: ## Build the application binary
 	@mkdir -p $(BUILD_DIR)
-	CGO_ENABLED=0 go build -trimpath -ldflags "-X reference-service-go/internal/build.Version=$(VERSION)" -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/reference-service-go
+	CGO_ENABLED=0 go build $(GO_BUILD_FLAGS) -o $(BUILD_DIR)/$(BINARY_NAME) ./cmd/reference-service-go
 
 run: ## Run the application locally
-	go run -ldflags "-X reference-service-go/internal/build.Version=$(VERSION)" ./cmd/reference-service-go -config config/config.yaml
+	go run $(GO_BUILD_FLAGS) ./cmd/reference-service-go -config config/config.yaml
 
 generate: ## Run code generation for OpenAPI specs and SQLC
 	go generate -tags tools ./...
