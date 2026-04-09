@@ -8,7 +8,7 @@ require (
 	github.com/jackc/pgx/v5 v5.9.1
 	github.com/monkescience/testastic v0.2.0
 	github.com/monkescience/vital v0.3.0
-	github.com/oapi-codegen/oapi-codegen/v2 v2.5.1
+	github.com/oapi-codegen/oapi-codegen/v2 v2.6.0
 	github.com/oapi-codegen/runtime v1.3.1
 	github.com/pressly/goose/v3 v3.27.0
 	github.com/sqlc-dev/sqlc v1.30.0
