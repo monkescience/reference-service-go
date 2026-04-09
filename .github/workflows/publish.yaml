@@ -23,7 +23,7 @@ env:
   RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag }}
   HELM_CHART_NAME: reference-service-go
   HELM_REPOSITORY: monkescience/helm-charts
-  HELM_VERSION: v3.19.0 # renovate: datasource=github-releases depName=helm/helm
+  HELM_VERSION: v3.20.1 # renovate: datasource=github-releases depName=helm/helm
 
 jobs:
   build:
