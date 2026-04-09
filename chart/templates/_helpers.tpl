@@ -32,3 +32,9 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 app.kubernetes.io/name: {{ include "name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
+
+{{- define "image" -}}
+{{- $repository := .Values.image.repository -}}
+{{- $tag := default (printf "v%s" .Chart.AppVersion) .Values.image.tag -}}
+{{- printf "%s:%s" $repository $tag -}}
+{{- end }}

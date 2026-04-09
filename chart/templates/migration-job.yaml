@@ -23,7 +23,7 @@ spec:
       restartPolicy: Never
       containers:
         - name: migrate
-          image: "ghcr.io/monkescience/reference-service-go:{{ .Chart.AppVersion }}"
+          image: '{{ include "image" . }}'
           imagePullPolicy: IfNotPresent
           command:
             - ./reference-service-go

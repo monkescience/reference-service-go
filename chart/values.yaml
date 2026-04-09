@@ -2,6 +2,10 @@ name: reference-service-go
 
 replicaCount: 1
 
+image:
+  repository: ghcr.io/monkescience/reference-service-go
+  tag: ""
+
 resources:
   requests:
     cpu: 250m
