@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/monkescience/testastic"
 )
 
@@ -100,6 +101,7 @@ func TestImportFlow(t *testing.T) {
 	var importResp createdImportResponse
 
 	decodeJSON(t, body, &importResp)
+	assertUUIDV7(t, importResp.ID)
 	testastic.Equal(t, "/imports/"+importResp.ID, resp.Header.Get("Location"))
 
 	// then: the import completes and imported pokemon are available through the API
@@ -241,6 +243,7 @@ func TestCreateCatchAfterImport(t *testing.T) {
 	var catchResp createdCatchResponse
 
 	decodeJSON(t, body, &catchResp)
+	assertUUIDV7(t, catchResp.ID)
 	testastic.Equal(t, "/catches/"+catchResp.ID, resp.Header.Get("Location"))
 
 	getResp := doGet(t, proc.URL()+"/catches/"+catchResp.ID)
@@ -312,6 +315,14 @@ type createdCatchResponse struct {
 
 type importStatusResponse struct {
 	Status string `json:"status"`
+}
+
+func assertUUIDV7(t *testing.T, raw string) {
+	t.Helper()
+
+	id, err := uuid.Parse(raw)
+	testastic.NoError(t, err)
+	testastic.Equal(t, uuid.Version(7), id.Version())
 }
 
 // HTTP helpers.

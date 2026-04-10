@@ -9,6 +9,7 @@ import (
 	"reference-service-go/internal/outgoing/postgres"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 )
@@ -53,12 +54,14 @@ func (s *GachaService) CreateCatch(ctx context.Context, ballType domain.Pokeball
 	pokemon := rowToDomainPokemon(row)
 	isShiny := domain.RollShiny(s.rng)
 	now := time.Now()
-	id := pgtype.UUID{Valid: true}
 
-	copy(id.Bytes[:], newUUIDBytes())
+	id, err := newUUIDV7()
+	if err != nil {
+		return nil, fmt.Errorf("creating catch id: %w", err)
+	}
 
 	err = s.queries.CreateCatch(ctx, postgres.CreateCatchParams{
-		ID:               id,
+		ID:               pgUUIDFromUUID(id),
 		PokemonPokedexID: row.PokedexID,
 		PokeballType:     string(ballType),
 		IsShiny:          isShiny,
@@ -76,7 +79,7 @@ func (s *GachaService) CreateCatch(ctx context.Context, ballType domain.Pokeball
 	)
 
 	return &domain.Catch{
-		ID:           uuidToString(id),
+		ID:           id,
 		Pokemon:      pokemon,
 		PokeballType: ballType,
 		IsShiny:      isShiny,
@@ -85,19 +88,19 @@ func (s *GachaService) CreateCatch(ctx context.Context, ballType domain.Pokeball
 }
 
 // GetCatch returns a persisted catch by ID.
-func (s *GachaService) GetCatch(ctx context.Context, id string) (*domain.Catch, error) {
-	pgID, err := parseUUID(id)
-	if err != nil {
-		return nil, fmt.Errorf("parsing catch ID: %w", err)
-	}
-
-	row, err := s.queries.GetCatch(ctx, pgID)
+func (s *GachaService) GetCatch(ctx context.Context, id uuid.UUID) (*domain.Catch, error) {
+	row, err := s.queries.GetCatch(ctx, pgUUIDFromUUID(id))
 	if err != nil {
 		return nil, fmt.Errorf("getting catch: %w", err)
 	}
 
+	rowID, err := uuidFromPG(row.ID)
+	if err != nil {
+		return nil, fmt.Errorf("converting catch id: %w", err)
+	}
+
 	return &domain.Catch{
-		ID:           uuidToString(row.ID),
+		ID:           rowID,
 		Pokemon:      rowToDomainPokemonFromCatch(row),
 		PokeballType: domain.PokeballType(row.PokeballType),
 		IsShiny:      row.IsShiny,

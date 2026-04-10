@@ -10,8 +10,8 @@ import (
 	"reference-service-go/internal/domain"
 	"reference-service-go/internal/outgoing/postgres"
 	"reference-service-go/internal/service"
-	"strings"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/monkescience/vital"
 	openapi_types "github.com/oapi-codegen/runtime/types"
@@ -30,13 +30,13 @@ var errInt32OutOfRange = errors.New("value is out of int32 range")
 // Importer defines the import operations the handler needs.
 type Importer interface {
 	CreateImport(ctx context.Context, source string) (*domain.Import, error)
-	GetImport(ctx context.Context, id string) (*domain.Import, error)
+	GetImport(ctx context.Context, id uuid.UUID) (*domain.Import, error)
 }
 
 // Catcher defines the catch operations the handler needs.
 type Catcher interface {
 	CreateCatch(ctx context.Context, ballType domain.PokeballType) (*domain.Catch, error)
-	GetCatch(ctx context.Context, id string) (*domain.Catch, error)
+	GetCatch(ctx context.Context, id uuid.UUID) (*domain.Catch, error)
 }
 
 // PokemonReader defines the Pokemon queries the handler needs.
@@ -103,7 +103,7 @@ func (h *APIHandler) CreateImport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := ImportResponse{
-		Id:        openapi_types.UUID(parseUUIDBytes(imp.ID)),
+		Id:        imp.ID,
 		Source:    ImportResponseSource(imp.Source),
 		Status:    ImportResponseStatus(imp.Status),
 		ItemCount: imp.ItemCount,
@@ -112,17 +112,17 @@ func (h *APIHandler) CreateImport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.logger.InfoContext(r.Context(), "import created",
-		slog.String("id", imp.ID),
+		slog.String("id", imp.ID.String()),
 		slog.String("source", imp.Source),
 	)
 
-	w.Header().Set("Location", "/imports/"+imp.ID)
+	w.Header().Set("Location", "/imports/"+imp.ID.String())
 	respondJSON(r.Context(), w, http.StatusCreated, resp, h.logger)
 }
 
 // GetImport returns the state of an import by ID.
 func (h *APIHandler) GetImport(w http.ResponseWriter, r *http.Request, importID openapi_types.UUID) {
-	imp, err := h.importer.GetImport(r.Context(), importID.String())
+	imp, err := h.importer.GetImport(r.Context(), importID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			vital.RespondProblem(r.Context(), w, vital.NotFound(
@@ -139,7 +139,7 @@ func (h *APIHandler) GetImport(w http.ResponseWriter, r *http.Request, importID 
 	}
 
 	respondJSON(r.Context(), w, http.StatusOK, ImportResponse{
-		Id:        openapi_types.UUID(parseUUIDBytes(imp.ID)),
+		Id:        imp.ID,
 		Source:    ImportResponseSource(imp.Source),
 		Status:    ImportResponseStatus(imp.Status),
 		ItemCount: imp.ItemCount,
@@ -178,20 +178,20 @@ func (h *APIHandler) CreateCatch(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := CatchResponse{
-		Id:           openapi_types.UUID(parseUUIDBytes(catch.ID)),
+		Id:           catch.ID,
 		Pokemon:      domainToSummary(catch.Pokemon),
 		PokeballType: CatchResponsePokeballType(catch.PokeballType),
 		IsShiny:      catch.IsShiny,
 		CaughtAt:     catch.CaughtAt,
 	}
 
-	w.Header().Set("Location", "/catches/"+catch.ID)
+	w.Header().Set("Location", "/catches/"+catch.ID.String())
 	respondJSON(r.Context(), w, http.StatusCreated, resp, h.logger)
 }
 
 // GetCatch returns a persisted catch by ID.
 func (h *APIHandler) GetCatch(w http.ResponseWriter, r *http.Request, catchID openapi_types.UUID) {
-	catch, err := h.catcher.GetCatch(r.Context(), catchID.String())
+	catch, err := h.catcher.GetCatch(r.Context(), catchID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			vital.RespondProblem(r.Context(), w, vital.NotFound(
@@ -208,7 +208,7 @@ func (h *APIHandler) GetCatch(w http.ResponseWriter, r *http.Request, catchID op
 	}
 
 	respondJSON(r.Context(), w, http.StatusOK, CatchResponse{
-		Id:           openapi_types.UUID(parseUUIDBytes(catch.ID)),
+		Id:           catch.ID,
 		Pokemon:      domainToSummary(catch.Pokemon),
 		PokeballType: CatchResponsePokeballType(catch.PokeballType),
 		IsShiny:      catch.IsShiny,
@@ -410,26 +410,6 @@ func respondJSON(ctx context.Context, w http.ResponseWriter, status int, body an
 	if err != nil {
 		logger.ErrorContext(ctx, "failed to encode response", slog.Any("error", err))
 	}
-}
-
-func parseUUIDBytes(s string) [16]byte {
-	var id [16]byte
-
-	var builder strings.Builder
-
-	for _, char := range s {
-		if char != '-' {
-			builder.WriteRune(char)
-		}
-	}
-
-	clean := builder.String()
-
-	for index := 0; index < len(id) && index*2+1 < len(clean); index++ {
-		_, _ = fmt.Sscanf(clean[index*2:index*2+2], "%02x", &id[index])
-	}
-
-	return id
 }
 
 func intToInt32(value int) (int32, error) {

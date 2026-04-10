@@ -1,6 +1,10 @@
 package domain
 
-import "time"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 // Rarity represents the rarity tier of a Pokemon.
 type Rarity string
@@ -46,7 +50,7 @@ type Pokemon struct {
 
 // Catch represents the result of opening a Pokeball.
 type Catch struct {
-	ID           string
+	ID           uuid.UUID
 	Pokemon      Pokemon
 	PokeballType PokeballType
 	IsShiny      bool
@@ -55,7 +59,7 @@ type Catch struct {
 
 // Import represents a Pokemon data import job.
 type Import struct {
-	ID        string
+	ID        uuid.UUID
 	Source    string
 	Status    ImportStatus
 	ItemCount int

@@ -8,6 +8,7 @@ import (
 	"reference-service-go/internal/outgoing/postgres"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/sync/errgroup"
@@ -49,12 +50,16 @@ func NewImportService(
 // CreateImport creates a new import record and starts async processing.
 func (s *ImportService) CreateImport(ctx context.Context, source string) (*domain.Import, error) {
 	now := time.Now()
-	id := pgtype.UUID{Valid: true}
 
-	copy(id.Bytes[:], newUUIDBytes())
+	id, err := newUUIDV7()
+	if err != nil {
+		return nil, fmt.Errorf("creating import id: %w", err)
+	}
+
+	pgID := pgUUIDFromUUID(id)
 
 	imp := domain.Import{
-		ID:        uuidToString(id),
+		ID:        id,
 		Source:    source,
 		Status:    domain.ImportStatusPending,
 		ItemCount: 0,
@@ -62,8 +67,8 @@ func (s *ImportService) CreateImport(ctx context.Context, source string) (*domai
 		UpdatedAt: now,
 	}
 
-	err := s.queries.CreateImport(ctx, postgres.CreateImportParams{
-		ID:        id,
+	err = s.queries.CreateImport(ctx, postgres.CreateImportParams{
+		ID:        pgID,
 		Source:    source,
 		Status:    string(domain.ImportStatusPending),
 		ItemCount: 0,
@@ -84,19 +89,19 @@ func (s *ImportService) CreateImport(ctx context.Context, source string) (*domai
 }
 
 // GetImport returns the current state of an import.
-func (s *ImportService) GetImport(ctx context.Context, id string) (*domain.Import, error) {
-	pgID, err := parseUUID(id)
-	if err != nil {
-		return nil, fmt.Errorf("parsing import ID: %w", err)
-	}
-
-	row, err := s.queries.GetImport(ctx, pgID)
+func (s *ImportService) GetImport(ctx context.Context, id uuid.UUID) (*domain.Import, error) {
+	row, err := s.queries.GetImport(ctx, pgUUIDFromUUID(id))
 	if err != nil {
 		return nil, fmt.Errorf("getting import: %w", err)
 	}
 
+	rowID, err := uuidFromPG(row.ID)
+	if err != nil {
+		return nil, fmt.Errorf("converting import id: %w", err)
+	}
+
 	return &domain.Import{
-		ID:        uuidToString(row.ID),
+		ID:        rowID,
 		Source:    row.Source,
 		Status:    domain.ImportStatus(row.Status),
 		ItemCount: int(row.ItemCount),
@@ -114,12 +119,12 @@ func (s *ImportService) Shutdown() {
 
 const batchSize = 50
 
-func (s *ImportService) runImport(ctx context.Context, importID pgtype.UUID) {
-	idStr := uuidToString(importID)
+func (s *ImportService) runImport(ctx context.Context, importID uuid.UUID) {
+	idStr := importID.String()
 	s.logger.Info("starting import", slog.String("import_id", idStr))
 
 	err := s.queries.UpdateImportStatus(ctx, postgres.UpdateImportStatusParams{
-		ID:        importID,
+		ID:        pgUUIDFromUUID(importID),
 		Status:    string(domain.ImportStatusProcessing),
 		ItemCount: 0,
 	})
@@ -156,7 +161,7 @@ func (s *ImportService) runImport(ctx context.Context, importID pgtype.UUID) {
 
 func (s *ImportService) upsertAllBatches(
 	ctx context.Context,
-	importID pgtype.UUID,
+	importID uuid.UUID,
 	pokemon []domain.Pokemon,
 ) bool {
 	for i := 0; i < len(pokemon); i += batchSize {
@@ -173,7 +178,7 @@ func (s *ImportService) upsertAllBatches(
 
 		//nolint:gosec // Batch index bounded by species count (~1025).
 		updateErr := s.queries.UpdateImportStatus(ctx, postgres.UpdateImportStatusParams{
-			ID:        importID,
+			ID:        pgUUIDFromUUID(importID),
 			Status:    string(domain.ImportStatusProcessing),
 			ItemCount: int32(end),
 		})
@@ -185,10 +190,10 @@ func (s *ImportService) upsertAllBatches(
 	return true
 }
 
-func (s *ImportService) completeImport(ctx context.Context, importID pgtype.UUID, idStr string, count int) {
+func (s *ImportService) completeImport(ctx context.Context, importID uuid.UUID, idStr string, count int) {
 	//nolint:gosec // Pokemon count bounded by species count (~1025).
 	err := s.queries.UpdateImportStatus(ctx, postgres.UpdateImportStatusParams{
-		ID:        importID,
+		ID:        pgUUIDFromUUID(importID),
 		Status:    string(domain.ImportStatusCompleted),
 		ItemCount: int32(count),
 	})
@@ -283,9 +288,9 @@ func (s *ImportService) upsertBatch(ctx context.Context, pokemon []domain.Pokemo
 	return nil
 }
 
-func (s *ImportService) failImport(ctx context.Context, importID pgtype.UUID) {
+func (s *ImportService) failImport(ctx context.Context, importID uuid.UUID) {
 	err := s.queries.UpdateImportStatus(ctx, postgres.UpdateImportStatusParams{
-		ID:     importID,
+		ID:     pgUUIDFromUUID(importID),
 		Status: string(domain.ImportStatusFailed),
 	})
 	if err != nil {
