@@ -1,5 +1,14 @@
 # Changelog
 
+## [v0.8.2](https://github.com/monkescience/reference-service-go/compare/v0.8.1...v0.8.2) (2026-04-10)
+
+### Features
+
+- **ids:** use UUIDv7 for import and catch IDs ([a11081b](https://github.com/monkescience/reference-service-go/commit/a11081bd7804c38a19365d7837e3002c0f180350))
+### Bug Fixes
+
+- **build:** standardize service build flags ([903b3ed](https://github.com/monkescience/reference-service-go/commit/903b3ed50bae032502b8109f27a36ed3818ac449))
+
 ## [v0.8.1](https://github.com/monkescience/reference-service-go/compare/v0.8.0...v0.8.1) (2026-04-09)
 
 ### Bug Fixes
