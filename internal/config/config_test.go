@@ -9,7 +9,11 @@ import (
 )
 
 func TestLoad(t *testing.T) {
+	t.Parallel()
+
 	t.Run("loads valid config", func(t *testing.T) {
+		t.Parallel()
+
 		// when: loading a valid config file
 		cfg, err := config.Load("../../config/config.yaml")
 
@@ -21,6 +25,8 @@ func TestLoad(t *testing.T) {
 	})
 
 	t.Run("decodes yaml config values", func(t *testing.T) {
+		t.Parallel()
+
 		// given: a temporary YAML config file
 		configFile, err := os.CreateTemp(t.TempDir(), "config-*.yaml")
 		testastic.NoError(t, err)
@@ -60,6 +66,8 @@ pokeapi:
 	})
 
 	t.Run("returns error when config file does not exist", func(t *testing.T) {
+		t.Parallel()
+
 		// when: loading a non-existent file
 		_, err := config.Load("nonexistent.yaml")
 
