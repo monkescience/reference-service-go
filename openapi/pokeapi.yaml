@@ -11,7 +11,7 @@ servers:
 paths:
   /pokemon-species:
     get:
-      operationId: list_pokemon_species
+      operationId: listPokemonSpecies
       summary: List Pokemon species (used to get total count)
       parameters:
         - name: limit
@@ -34,7 +34,7 @@ paths:
 
   /pokemon/{id}:
     get:
-      operationId: get_pokemon
+      operationId: getPokemon
       summary: Get a Pokemon by ID
       parameters:
         - name: id
@@ -53,7 +53,7 @@ paths:
 
   /pokemon-species/{id}:
     get:
-      operationId: get_pokemon_species
+      operationId: getPokemonSpecies
       summary: Get a Pokemon species by ID
       parameters:
         - name: id

@@ -1,74 +1,24 @@
 //go:build integration
 
-package tests_test
+package integration_test
 
 import (
 	"context"
-	"flag"
 	"fmt"
-	"log"
 	"net"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"testing"
+	"text/template"
 	"time"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/monkescience/testastic"
 	"github.com/testcontainers/testcontainers-go"
 	tcpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
 )
 
-var (
-	postgresURL string        //nolint:gochecknoglobals // Shared test state via TestMain.
-	testPool    *pgxpool.Pool //nolint:gochecknoglobals // Shared test state via TestMain.
-)
-
-func TestMain(m *testing.M) {
-	flag.Parse()
-
-	if testing.Short() {
-		os.Exit(0)
-	}
-
-	ctx := context.Background()
-	exitCode := 1
-
-	pg, err := startPostgres(ctx)
-	if err != nil {
-		log.Fatalf("starting postgres: %v", err)
-	}
-
-	cleanup := func() {
-		testPool.Close()
-
-		if termErr := pg.Terminate(ctx); termErr != nil {
-			log.Printf("terminating postgres: %v", termErr)
-		}
-	}
-
-	postgresURL, err = pg.ConnectionString(ctx, "sslmode=disable")
-	if err != nil {
-		log.Fatalf("getting postgres connection string: %v", err)
-	}
-
-	err = runMigrations(postgresURL)
-	if err != nil {
-		log.Fatalf("running migrations: %v", err)
-	}
-
-	testPool, err = pgxpool.New(ctx, postgresURL)
-	if err != nil {
-		log.Fatalf("connecting to postgres: %v", err)
-	}
-
-	exitCode = testastic.CollectProcessCoverage(m, filepath.Join("..", "bin", "coverage.out"))
-	cleanup()
-
-	os.Exit(exitCode)
-}
+const databaseEnvVar = "REFERENCE_SERVICE_TEST_DATABASE_URL"
 
 func startPostgres(ctx context.Context) (*tcpostgres.PostgresContainer, error) {
 	container, err := tcpostgres.Run(ctx,
@@ -90,7 +40,7 @@ func startPostgres(ctx context.Context) (*tcpostgres.PostgresContainer, error) {
 }
 
 func runMigrations(databaseURL string) error {
-	configPath, err := writeConfig(databaseURL, "http://unused:0", 0)
+	configPath, err := writeConfig("http://unused:0", 8080)
 	if err != nil {
 		return fmt.Errorf("writing migration config: %w", err)
 	}
@@ -100,11 +50,12 @@ func runMigrations(databaseURL string) error {
 	cmd := exec.Command(
 		"go", "run",
 		"-trimpath",
-		"-ldflags", "-X reference-service-go/internal/build.Version=test",
+		"-ldflags", "-X reference-service-go/internal/build.version=test",
 		"./cmd/reference-service-go",
 		"-config", configPath, "-migrate-only",
 	)
 	cmd.Dir = ".."
+	cmd.Env = append(os.Environ(), databaseEnvVar+"="+databaseURL)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
@@ -116,34 +67,30 @@ func runMigrations(databaseURL string) error {
 	return nil
 }
 
-func writeConfig(databaseURL string, pokeapiURL string, port int) (string, error) {
-	content := fmt.Sprintf(`log_config:
-  level: "debug"
-  format: "text"
-  add_source: false
-
-server:
-  port: %d
-
-database:
-  url: "%s"
-
-pokeapi:
-  base_url: "%s"
-  timeout: "30s"
-  concurrency: 5
-`, port, databaseURL, pokeapiURL)
+func writeConfig(pokeapiURL string, port int) (string, error) {
+	tmpl, err := template.ParseFiles("testdata/config/config.yaml.tmpl")
+	if err != nil {
+		return "", fmt.Errorf("parse config template: %w", err)
+	}
 
 	f, err := os.CreateTemp("", "e2e-config-*.yaml")
 	if err != nil {
 		return "", fmt.Errorf("creating temp config: %w", err)
 	}
 
-	_, err = f.WriteString(content)
+	err = tmpl.Execute(f, struct {
+		DatabaseEnvVar string
+		PokeAPIURL     string
+		Port           int
+	}{
+		DatabaseEnvVar: databaseEnvVar,
+		PokeAPIURL:     pokeapiURL,
+		Port:           port,
+	})
 	if err != nil {
 		f.Close()
 
-		return "", fmt.Errorf("writing config: %w", err)
+		return "", fmt.Errorf("rendering config: %w", err)
 	}
 
 	err = f.Close()
@@ -173,8 +120,9 @@ func startService(t *testing.T, pokeapiURL string) *testastic.Process {
 	t.Helper()
 
 	port := findFreePort(t)
+	t.Setenv(databaseEnvVar, postgresURL)
 
-	configPath, err := writeConfig(postgresURL, pokeapiURL, port)
+	configPath, err := writeConfig(pokeapiURL, port)
 	if err != nil {
 		t.Fatalf("writing config: %v", err)
 	}
@@ -183,10 +131,10 @@ func startService(t *testing.T, pokeapiURL string) *testastic.Process {
 
 	return testastic.StartProcess(t.Context(), t,
 		"reference-service-go/cmd/reference-service-go",
-		testastic.HTTPCheck(port, "/pokemon"),
+		testastic.HTTPCheck(port, "/health/ready"),
 		testastic.WithPort(port),
 		testastic.WithArgs("-config", configPath),
-		testastic.WithBuildArgs("-trimpath", "-ldflags", "-X reference-service-go/internal/build.Version=test"),
+		testastic.WithBuildArgs("-trimpath", "-ldflags", "-X reference-service-go/internal/build.version=test"),
 		testastic.WithReadyTimeout(10*time.Second),
 	)
 }

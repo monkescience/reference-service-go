@@ -85,6 +85,10 @@ func (s *Store) CreateImport(ctx context.Context, imp pokemon.Import) error {
 func (s *Store) GetImport(ctx context.Context, id uuid.UUID) (pokemon.Import, error) {
 	row, err := s.queries.GetImport(ctx, pgUUIDFromUUID(id))
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return pokemon.Import{}, pokemon.ErrImportNotFound
+		}
+
 		return pokemon.Import{}, fmt.Errorf("get import: %w", err)
 	}
 
@@ -157,6 +161,10 @@ func (s *Store) GetPokemonByID(ctx context.Context, pokedexID int) (pokemon.Poke
 	//nolint:gosec // API validates Pokedex IDs before calling the store.
 	row, err := s.queries.GetPokemonByID(ctx, int32(pokedexID))
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return pokemon.Pokemon{}, pokemon.ErrPokemonNotFound
+		}
+
 		return pokemon.Pokemon{}, fmt.Errorf("get pokemon by id: %w", err)
 	}
 
@@ -242,6 +250,10 @@ func (s *Store) CreateCatch(ctx context.Context, caught catch.Catch) error {
 func (s *Store) GetCatch(ctx context.Context, id uuid.UUID) (catch.Catch, error) {
 	row, err := s.queries.GetCatch(ctx, pgUUIDFromUUID(id))
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return catch.Catch{}, catch.ErrCatchNotFound
+		}
+
 		return catch.Catch{}, fmt.Errorf("get catch: %w", err)
 	}
 

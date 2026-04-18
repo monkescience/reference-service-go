@@ -23,7 +23,7 @@ func Setup(ctx context.Context, enabled bool, endpoint string) error {
 	res, err := resource.New(ctx,
 		resource.WithAttributes(
 			semconv.ServiceName(build.ServiceName),
-			semconv.ServiceVersion(build.Version),
+			semconv.ServiceVersion(build.Version()),
 		),
 	)
 	if err != nil {

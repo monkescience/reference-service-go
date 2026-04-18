@@ -22,7 +22,7 @@ paths:
   /imports:
     post:
       tags: [imports]
-      operationId: create_import
+      operationId: createImport
       summary: Create an import job
       requestBody:
         required: true
@@ -53,7 +53,7 @@ paths:
   /imports/{import_id}:
     get:
       tags: [imports]
-      operationId: get_import
+      operationId: getImport
       summary: Get import status
       parameters:
         - name: import_id
@@ -81,7 +81,7 @@ paths:
   /pokemon:
     get:
       tags: [pokemon]
-      operationId: list_pokemon
+      operationId: listPokemon
       summary: List imported Pokemon
       parameters:
         - name: limit
@@ -121,7 +121,7 @@ paths:
   /pokemon/{pokedex_id}:
     get:
       tags: [pokemon]
-      operationId: get_pokemon
+      operationId: getPokemon
       summary: Get a Pokemon by Pokedex ID
       parameters:
         - name: pokedex_id
@@ -148,7 +148,7 @@ paths:
   /catches:
     post:
       tags: [catches]
-      operationId: create_catch
+      operationId: createCatch
       summary: Create a catch by opening a Pokeball
       requestBody:
         required: true
@@ -185,7 +185,7 @@ paths:
   /catches/{catch_id}:
     get:
       tags: [catches]
-      operationId: get_catch
+      operationId: getCatch
       summary: Get a catch by ID
       parameters:
         - name: catch_id

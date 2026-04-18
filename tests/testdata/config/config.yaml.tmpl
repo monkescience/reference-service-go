@@ -1,0 +1,23 @@
+log_config:
+  level: "debug"
+  format: "text"
+  add_source: false
+
+server:
+  port: {{.Port}}
+  read_timeout: "10s"
+  write_timeout: "10s"
+  idle_timeout: "120s"
+  shutdown_timeout: "20s"
+
+database:
+  url_env: "{{.DatabaseEnvVar}}"
+
+pokeapi:
+  base_url: "{{.PokeAPIURL}}"
+  timeout: "30s"
+  concurrency: 5
+
+otel:
+  enabled: false
+  endpoint: "localhost:4317"

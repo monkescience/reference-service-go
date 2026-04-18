@@ -4,7 +4,7 @@ BINARY_NAME := reference-service-go
 BUILD_DIR := ./bin
 CHART_PATH := ./chart
 VERSION := $(shell git describe --tags --always --dirty 2>/dev/null || echo "dev")
-GO_LDFLAGS := -X reference-service-go/internal/build.Version=$(VERSION)
+GO_LDFLAGS := -X reference-service-go/internal/build.version=$(VERSION)
 GO_BUILD_FLAGS := -trimpath -ldflags "$(GO_LDFLAGS)"
 COVERAGE_PROFILE := $(BUILD_DIR)/coverage.out
 COVERAGE_HTML := $(BUILD_DIR)/coverage.html

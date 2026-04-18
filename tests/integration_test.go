@@ -1,6 +1,6 @@
 //go:build integration
 
-package tests_test
+package integration_test
 
 import (
 	"encoding/json"
@@ -72,16 +72,22 @@ func importPokemonForSetup(t *testing.T, procURL string) {
 	}, 30*time.Second)
 }
 
-func TestHealthEndpoint(t *testing.T) {
+func TestHealthEndpoints(t *testing.T) {
 	// given: a running service with a fresh PokeAPI fake
 	mock := newPokeAPIMock(t)
 	proc := startService(t, mock.server.URL+"/api/v2")
 
-	// when: GET /health/live is called
-	resp := doGet(t, proc.URL()+"/health/live")
+	for _, path := range []string{"/health/live", "/health/started", "/health/ready"} {
+		path := path
 
-	// then: the live endpoint responds successfully
-	testastic.Equal(t, http.StatusOK, resp.StatusCode)
+		t.Run(path, func(t *testing.T) {
+			// when: a health endpoint is called
+			resp := doGet(t, proc.URL()+path)
+
+			// then: it responds successfully
+			testastic.Equal(t, http.StatusOK, resp.StatusCode)
+		})
+	}
 }
 
 func TestImportFlow(t *testing.T) {

@@ -4,9 +4,9 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"log"
 	"log/slog"
 	"net/http"
+	"os"
 	"reference-service-go/internal/build"
 	"reference-service-go/internal/config"
 	"reference-service-go/internal/core/catch"
@@ -15,22 +15,13 @@ import (
 	"reference-service-go/internal/outgoing/pokeapi"
 	"reference-service-go/internal/outgoing/referencepg"
 	"reference-service-go/internal/outgoing/tracing"
-	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/monkescience/vital"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
-const (
-	defaultServerPort  = 8080
-	serverReadTimeout  = 10 * time.Second
-	serverWriteTimeout = 10 * time.Second
-	serverIdleTimeout  = 120 * time.Second
-	shutdownTimeout    = 20 * time.Second
-)
-
-func setupLogger(cfg *config.Config) *slog.Logger {
+func setupLogger(cfg *config.Config) (*slog.Logger, error) {
 	logConfig := vital.LogConfig{
 		Level:     cfg.LogConfig.Level,
 		Format:    cfg.LogConfig.Format,
@@ -39,19 +30,20 @@ func setupLogger(cfg *config.Config) *slog.Logger {
 
 	handler, err := vital.NewHandlerFromConfig(logConfig, vital.WithBuiltinKeys())
 	if err != nil {
-		log.Fatalf("failed to create logger handler: %v", err)
+		return nil, fmt.Errorf("create logger handler: %w", err)
 	}
 
 	logger := slog.New(handler)
 	slog.SetDefault(logger)
 
-	return logger
+	return logger, nil
 }
 
 func main() {
 	err := run()
 	if err != nil {
-		log.Fatalf("server error: %v", err)
+		slog.ErrorContext(context.Background(), "server error", slog.Any("error", err))
+		os.Exit(1)
 	}
 }
 
@@ -66,21 +58,31 @@ func run() error {
 		return fmt.Errorf("loading config: %w", err)
 	}
 
+	logger, err := setupLogger(cfg)
+	if err != nil {
+		return fmt.Errorf("setting up logger: %w", err)
+	}
+
 	if *migrateOnly {
-		err = referencepg.Migrate(context.Background(), cfg.Database.URL)
+		databaseURL, databaseErr := cfg.Database.URL()
+		if databaseErr != nil {
+			return fmt.Errorf("loading database url: %w", databaseErr)
+		}
+
+		err = referencepg.Migrate(context.Background(), databaseURL)
 		if err != nil {
 			return fmt.Errorf("running migrations: %w", err)
 		}
 
+		logger.Info("migrations completed")
+
 		return nil
 	}
 
-	return runServer(cfg)
+	return runServer(cfg, logger)
 }
 
-func runServer(cfg *config.Config) error {
-	logger := setupLogger(cfg)
-
+func runServer(cfg *config.Config, logger *slog.Logger) error {
 	ctx := context.Background()
 
 	err := tracing.Setup(ctx, cfg.OTel.Enabled, cfg.OTel.Endpoint)
@@ -88,7 +90,12 @@ func runServer(cfg *config.Config) error {
 		return fmt.Errorf("setting up tracing: %w", err)
 	}
 
-	store, err := referencepg.New(ctx, cfg.Database.URL)
+	databaseURL, err := cfg.Database.URL()
+	if err != nil {
+		return fmt.Errorf("loading database url: %w", err)
+	}
+
+	store, err := referencepg.New(ctx, databaseURL)
 	if err != nil {
 		return fmt.Errorf("connecting to database: %w", err)
 	}
@@ -113,18 +120,13 @@ func runServer(cfg *config.Config) error {
 	catchService := catch.NewService(store, store, catch.DefaultRand{})
 	router := setupRouter(logger, pokemonService, catchService)
 
-	port := cfg.Server.Port
-	if port == 0 {
-		port = defaultServerPort
-	}
-
 	server := vital.NewServer(
 		router,
-		vital.WithPort(port),
-		vital.WithReadTimeout(serverReadTimeout),
-		vital.WithWriteTimeout(serverWriteTimeout),
-		vital.WithIdleTimeout(serverIdleTimeout),
-		vital.WithShutdownTimeout(shutdownTimeout),
+		vital.WithPort(cfg.Server.Port),
+		vital.WithReadTimeout(cfg.Server.ReadTimeout),
+		vital.WithWriteTimeout(cfg.Server.WriteTimeout),
+		vital.WithIdleTimeout(cfg.Server.IdleTimeout),
+		vital.WithShutdownTimeout(cfg.Server.ShutdownTimeout),
 		vital.WithLogger(logger),
 		vital.WithShutdownFunc(tracing.Shutdown),
 	)
@@ -151,7 +153,7 @@ func setupRouter(
 	referencehttp.HandlerFromMux(handler, router)
 
 	healthHandler := vital.NewHealthHandler(
-		vital.WithVersion(build.Version),
+		vital.WithVersion(build.Version()),
 	)
 	router.Mount("/health", healthHandler)
 

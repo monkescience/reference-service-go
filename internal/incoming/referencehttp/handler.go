@@ -11,7 +11,6 @@ import (
 	"reference-service-go/internal/core/pokemon"
 
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
 	"github.com/monkescience/vital"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
@@ -102,7 +101,7 @@ func (h *APIHandler) CreateImport(w http.ResponseWriter, r *http.Request) {
 func (h *APIHandler) GetImport(w http.ResponseWriter, r *http.Request, importID openapi_types.UUID) {
 	imp, err := h.pokemonService.GetImport(r.Context(), importID)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, pokemon.ErrImportNotFound) {
 			vital.RespondProblem(r.Context(), w, vital.NotFound(
 				fmt.Sprintf("import %s not found", importID),
 			))
@@ -171,7 +170,7 @@ func (h *APIHandler) CreateCatch(w http.ResponseWriter, r *http.Request) {
 func (h *APIHandler) GetCatch(w http.ResponseWriter, r *http.Request, catchID openapi_types.UUID) {
 	caught, err := h.catchService.GetCatch(r.Context(), catchID)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, catch.ErrCatchNotFound) {
 			vital.RespondProblem(r.Context(), w, vital.NotFound(
 				fmt.Sprintf("catch %s not found", catchID),
 			))
@@ -260,7 +259,7 @@ func (h *APIHandler) GetPokemon(w http.ResponseWriter, r *http.Request, pokedexI
 
 	pokemonEntity, err := h.pokemonService.GetPokemonByID(r.Context(), pokedexID)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
+		if errors.Is(err, pokemon.ErrPokemonNotFound) {
 			vital.RespondProblem(r.Context(), w, vital.NotFound(
 				fmt.Sprintf("pokemon %d not found", pokedexID),
 			))

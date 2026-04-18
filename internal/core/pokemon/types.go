@@ -2,9 +2,15 @@ package pokemon
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/google/uuid"
+)
+
+var (
+	ErrImportNotFound  = errors.New("import not found")
+	ErrPokemonNotFound = errors.New("pokemon not found")
 )
 
 // Rarity represents the rarity tier of a Pokemon.

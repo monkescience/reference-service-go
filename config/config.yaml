@@ -10,10 +10,14 @@ log_config:
 # HTTP server configuration
 server:
   port: 8080
+  read_timeout: "10s"
+  write_timeout: "10s"
+  idle_timeout: "120s"
+  shutdown_timeout: "20s"
 
 # PostgreSQL database connection
 database:
-  url: "postgres://postgres:postgres@localhost:5432/pokemon?sslmode=disable"
+  url_env: "DATABASE_URL"
 
 # PokeAPI client configuration
 pokeapi:

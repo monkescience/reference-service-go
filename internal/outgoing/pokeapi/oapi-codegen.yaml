@@ -2,4 +2,4 @@ package: pokeapi
 generate:
   models: true
   client: true
-output: ../internal/outgoing/pokeapi/client.gen.go
+output: client.gen.go

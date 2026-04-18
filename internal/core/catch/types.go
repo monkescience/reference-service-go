@@ -10,7 +10,10 @@ import (
 )
 
 // ErrNoPokemonImported is returned when no Pokemon have been imported yet.
-var ErrNoPokemonImported = errors.New("no pokemon imported yet")
+var (
+	ErrNoPokemonImported = errors.New("no pokemon imported yet")
+	ErrCatchNotFound     = errors.New("catch not found")
+)
 
 // PokeballType represents the type of Pokeball used.
 type PokeballType string
