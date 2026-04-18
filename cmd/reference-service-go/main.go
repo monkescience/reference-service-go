@@ -9,11 +9,11 @@ import (
 	"net/http"
 	"reference-service-go/internal/build"
 	"reference-service-go/internal/config"
-	"reference-service-go/internal/domain"
-	"reference-service-go/internal/incoming/http/referenceapi"
-	"reference-service-go/internal/outgoing/http/pokeapi"
-	"reference-service-go/internal/outgoing/postgres"
-	"reference-service-go/internal/service"
+	"reference-service-go/internal/core/catch"
+	"reference-service-go/internal/core/pokemon"
+	"reference-service-go/internal/incoming/referencehttp"
+	"reference-service-go/internal/outgoing/pokeapi"
+	"reference-service-go/internal/outgoing/referencepg"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -65,7 +65,7 @@ func run() error {
 	}
 
 	if *migrateOnly {
-		err = postgres.RunMigrations(cfg.Database.URL)
+		err = referencepg.Migrate(context.Background(), cfg.Database.URL)
 		if err != nil {
 			return fmt.Errorf("running migrations: %w", err)
 		}
@@ -81,14 +81,12 @@ func runServer(cfg *config.Config) error {
 
 	ctx := context.Background()
 
-	pool, err := postgres.Connect(ctx, cfg.Database.URL)
+	store, err := referencepg.New(ctx, cfg.Database.URL)
 	if err != nil {
 		return fmt.Errorf("connecting to database: %w", err)
 	}
 
-	defer pool.Close()
-
-	queries := postgres.New(pool)
+	defer store.Close()
 
 	pokeapiClient, err := pokeapi.NewFetcher(
 		&http.Client{Timeout: cfg.PokeAPI.Timeout},
@@ -98,12 +96,12 @@ func runServer(cfg *config.Config) error {
 		return fmt.Errorf("creating pokeapi client: %w", err)
 	}
 
-	importService := service.NewImportService(logger, pokeapiClient, queries, pool, cfg.PokeAPI.Concurrency)
+	pokemonService := pokemon.NewService(pokeapiClient, store, store, cfg.PokeAPI.Concurrency)
 
-	defer importService.Shutdown()
+	defer pokemonService.Shutdown()
 
-	gachaService := service.NewGachaService(logger, queries, domain.DefaultRand{})
-	router := setupRouter(logger, importService, gachaService, queries)
+	catchService := catch.NewService(store, store, catch.DefaultRand{})
+	router := setupRouter(logger, pokemonService, catchService)
 
 	port := cfg.Server.Port
 	if port == 0 {
@@ -130,16 +128,15 @@ func runServer(cfg *config.Config) error {
 
 func setupRouter(
 	logger *slog.Logger,
-	importService *service.ImportService,
-	gachaService *service.GachaService,
-	queries *postgres.Queries,
+	pokemonService *pokemon.Service,
+	catchService *catch.Service,
 ) chi.Router {
 	router := chi.NewRouter()
 	router.Use(vital.Recovery(logger))
 	router.Use(vital.RequestLogger(logger))
 
-	handler := referenceapi.NewHandler(logger, importService, gachaService, queries)
-	referenceapi.HandlerFromMux(handler, router)
+	handler := referencehttp.NewHandler(pokemonService, catchService)
+	referencehttp.HandlerFromMux(handler, router)
 
 	healthHandler := vital.NewHealthHandler(
 		vital.WithVersion(build.Version),

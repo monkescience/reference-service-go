@@ -1,12 +1,12 @@
 version: "2"
 sql:
   - engine: "postgresql"
-    queries: "internal/outgoing/postgres/query.sql"
-    schema: "migrations/"
+    queries: "internal/outgoing/referencepg/queries/query.sql"
+    schema: "internal/outgoing/referencepg/migrations/"
     gen:
       go:
-        package: "postgres"
-        out: "internal/outgoing/postgres"
+        package: "sqlcgen"
+        out: "internal/outgoing/referencepg/sqlcgen"
         sql_package: "pgx/v5"
         emit_json_tags: true
         emit_empty_slices: true

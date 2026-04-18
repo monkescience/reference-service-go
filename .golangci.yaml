@@ -16,6 +16,9 @@ linters:
           bson: snake
 
   exclusions:
+    paths:
+      - ".*\\.gen\\.go$"
+      - "internal/outgoing/referencepg/sqlcgen"
     rules:
       # Disable strict linters in test files
       - path: _test\.go

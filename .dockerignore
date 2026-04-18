@@ -1,0 +1,14 @@
+.git
+.github
+.idea
+bin
+chart
+tests
+*.md
+LICENSE
+.golangci.yaml
+.editorconfig
+.gitattributes
+.gitignore
+Makefile
+renovate.json

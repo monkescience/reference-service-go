@@ -11,7 +11,7 @@ COVERAGE_HTML := $(BUILD_DIR)/coverage.html
 SPECTRAL_RULESET := openapi/spectral.ruleset.yaml
 SPECTRAL_SPECS := openapi/reference-api.yaml
 
-.PHONY: build run generate test coverage fmt lint spectral clean docker-build helm-lint help
+.PHONY: build run generate test test-unit test-blackbox coverage fmt lint spectral clean docker-build helm-lint help
 
 .DEFAULT_GOAL := help
 
@@ -28,8 +28,13 @@ run: ## Run the application locally
 generate: ## Run code generation for OpenAPI specs and SQLC
 	go generate -tags tools ./...
 
-test: ## Run all tests with race detection (requires Docker)
-	TESTCONTAINERS_RYUK_DISABLED=true go test -v -race -tags integration ./...
+test: test-unit test-blackbox ## Run all tests
+
+test-unit: ## Run unit tests (no Docker required)
+	go test -race ./internal/...
+
+test-blackbox: ## Run blackbox/integration tests (requires Docker)
+	TESTCONTAINERS_RYUK_DISABLED=true go test -v -race -tags integration ./tests/...
 
 coverage: ## Run black-box coverage report (requires Docker)
 	@mkdir -p $(BUILD_DIR)

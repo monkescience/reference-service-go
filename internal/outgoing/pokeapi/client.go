@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"reference-service-go/internal/domain"
+	"reference-service-go/internal/core/pokemon"
 	"strconv"
 )
 
-// Fetcher wraps the generated PokeAPI client with domain-level methods.
+var _ pokemon.Fetcher = (*Fetcher)(nil)
+
+// Fetcher wraps the generated PokeAPI client with core-level methods.
 type Fetcher struct {
 	client *ClientWithResponses
 }
@@ -30,9 +32,7 @@ func NewFetcher(httpClient *http.Client, baseURL string) (*Fetcher, error) {
 func (f *Fetcher) FetchSpeciesCount(ctx context.Context) (int, error) {
 	limit := 0
 
-	resp, err := f.client.ListPokemonSpeciesWithResponse(ctx, &ListPokemonSpeciesParams{
-		Limit: &limit,
-	})
+	resp, err := f.client.ListPokemonSpeciesWithResponse(ctx, &ListPokemonSpeciesParams{Limit: &limit})
 	if err != nil {
 		return 0, fmt.Errorf("fetching species count: %w", err)
 	}
@@ -44,8 +44,8 @@ func (f *Fetcher) FetchSpeciesCount(ctx context.Context) (int, error) {
 	return resp.JSON200.Count, nil
 }
 
-// FetchPokemon fetches a Pokemon by ID and maps it to a domain Pokemon.
-func (f *Fetcher) FetchPokemon(ctx context.Context, id int) (*domain.Pokemon, error) {
+// FetchPokemon fetches a Pokemon by ID and maps it to a core Pokemon.
+func (f *Fetcher) FetchPokemon(ctx context.Context, id int) (*pokemon.Pokemon, error) {
 	idStr := strconv.Itoa(id)
 
 	pokemonResp, err := f.client.GetPokemonWithResponse(ctx, idStr)
@@ -55,7 +55,11 @@ func (f *Fetcher) FetchPokemon(ctx context.Context, id int) (*domain.Pokemon, er
 
 	if pokemonResp.JSON200 == nil {
 		//nolint:err113 // Dynamic HTTP status.
-		return nil, fmt.Errorf("unexpected status %s for pokemon %d", pokemonResp.Status(), id)
+		return nil, fmt.Errorf(
+			"unexpected status %s for pokemon %d",
+			pokemonResp.Status(),
+			id,
+		)
 	}
 
 	speciesResp, err := f.client.GetPokemonSpeciesWithResponse(ctx, idStr)
@@ -65,23 +69,27 @@ func (f *Fetcher) FetchPokemon(ctx context.Context, id int) (*domain.Pokemon, er
 
 	if speciesResp.JSON200 == nil {
 		//nolint:err113 // Dynamic HTTP status.
-		return nil, fmt.Errorf("unexpected status %s for species %d", speciesResp.Status(), id)
+		return nil, fmt.Errorf(
+			"unexpected status %s for species %d",
+			speciesResp.Status(),
+			id,
+		)
 	}
 
-	return mapToDomain(pokemonResp.JSON200, speciesResp.JSON200), nil
+	return mapToPokemon(pokemonResp.JSON200, speciesResp.JSON200), nil
 }
 
-func mapToDomain(pokemon *PokemonDetail, species *PokemonSpeciesDetail) *domain.Pokemon {
-	types := make([]string, 0, len(pokemon.Types))
-	for _, t := range pokemon.Types {
-		types = append(types, t.Type.Name)
+func mapToPokemon(detail *PokemonDetail, species *PokemonSpeciesDetail) *pokemon.Pokemon {
+	types := make([]string, 0, len(detail.Types))
+	for _, typeEntry := range detail.Types {
+		types = append(types, typeEntry.Type.Name)
 	}
 
-	stats := extractStats(pokemon.Stats)
+	stats := extractStats(detail.Stats)
 
-	baseExp := 0
-	if pokemon.BaseExperience != nil {
-		baseExp = *pokemon.BaseExperience
+	baseExperience := 0
+	if detail.BaseExperience != nil {
+		baseExperience = *detail.BaseExperience
 	}
 
 	captureRate := 0
@@ -89,19 +97,19 @@ func mapToDomain(pokemon *PokemonDetail, species *PokemonSpeciesDetail) *domain.
 		captureRate = *species.CaptureRate
 	}
 
-	return &domain.Pokemon{
-		PokedexID:      pokemon.Id,
-		Name:           pokemon.Name,
-		Rarity:         domain.AssignRarity(species.IsMythical, species.IsLegendary, baseExp),
+	return &pokemon.Pokemon{
+		PokedexID:      detail.Id,
+		Name:           detail.Name,
+		Rarity:         pokemon.AssignRarity(species.IsMythical, species.IsLegendary, baseExperience),
 		Types:          types,
-		SpriteURL:      selectSprite(pokemon.Sprites),
+		SpriteURL:      selectSprite(detail.Sprites),
 		HP:             stats.hp,
 		Attack:         stats.attack,
 		Defense:        stats.defense,
 		SpecialAttack:  stats.specialAttack,
 		SpecialDefense: stats.specialDefense,
 		Speed:          stats.speed,
-		BaseExperience: baseExp,
+		BaseExperience: baseExperience,
 		CaptureRate:    captureRate,
 		IsLegendary:    species.IsLegendary,
 		IsMythical:     species.IsMythical,
@@ -120,20 +128,20 @@ type pokemonStats struct {
 func extractStats(stats []PokemonStatEntry) pokemonStats {
 	var result pokemonStats
 
-	for _, s := range stats {
-		switch s.Stat.Name {
+	for _, stat := range stats {
+		switch stat.Stat.Name {
 		case "hp":
-			result.hp = s.BaseStat
+			result.hp = stat.BaseStat
 		case "attack":
-			result.attack = s.BaseStat
+			result.attack = stat.BaseStat
 		case "defense":
-			result.defense = s.BaseStat
+			result.defense = stat.BaseStat
 		case "special-attack":
-			result.specialAttack = s.BaseStat
+			result.specialAttack = stat.BaseStat
 		case "special-defense":
-			result.specialDefense = s.BaseStat
+			result.specialDefense = stat.BaseStat
 		case "speed":
-			result.speed = s.BaseStat
+			result.speed = stat.BaseStat
 		}
 	}
 
