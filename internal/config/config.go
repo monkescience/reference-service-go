@@ -20,6 +20,13 @@ type Config struct {
 	Server   ServerConfig   `yaml:"server"`
 	Database DatabaseConfig `yaml:"database"`
 	PokeAPI  PokeAPIConfig  `yaml:"pokeapi"`
+	OTel     OTelConfig     `yaml:"otel"`
+}
+
+// OTelConfig holds OpenTelemetry tracing settings.
+type OTelConfig struct {
+	Enabled  bool   `yaml:"enabled"`
+	Endpoint string `yaml:"endpoint"`
 }
 
 // ServerConfig holds HTTP server settings.

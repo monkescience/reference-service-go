@@ -1,5 +1,8 @@
 package build
 
+// ServiceName is the canonical service identifier used for telemetry resources.
+const ServiceName = "reference-service-go"
+
 // Version is set at build time via -ldflags "-X reference-service-go/internal/build.Version=...".
 var Version string
 

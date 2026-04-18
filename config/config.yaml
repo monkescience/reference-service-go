@@ -20,3 +20,10 @@ pokeapi:
   base_url: "https://pokeapi.co/api/v2"
   timeout: "30s"
   concurrency: 10
+
+# OpenTelemetry tracing configuration
+# When enabled is false, propagation still works but no exporter is wired,
+# so there is no shutdown stall when no collector is reachable.
+otel:
+  enabled: false
+  endpoint: "localhost:4317"

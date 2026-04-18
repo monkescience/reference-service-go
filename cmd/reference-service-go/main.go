@@ -14,10 +14,12 @@ import (
 	"reference-service-go/internal/incoming/referencehttp"
 	"reference-service-go/internal/outgoing/pokeapi"
 	"reference-service-go/internal/outgoing/referencepg"
+	"reference-service-go/internal/outgoing/tracing"
 	"time"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/monkescience/vital"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 const (
@@ -81,6 +83,11 @@ func runServer(cfg *config.Config) error {
 
 	ctx := context.Background()
 
+	err := tracing.Setup(ctx, cfg.OTel.Enabled, cfg.OTel.Endpoint)
+	if err != nil {
+		return fmt.Errorf("setting up tracing: %w", err)
+	}
+
 	store, err := referencepg.New(ctx, cfg.Database.URL)
 	if err != nil {
 		return fmt.Errorf("connecting to database: %w", err)
@@ -89,7 +96,10 @@ func runServer(cfg *config.Config) error {
 	defer store.Close()
 
 	pokeapiClient, err := pokeapi.NewFetcher(
-		&http.Client{Timeout: cfg.PokeAPI.Timeout},
+		&http.Client{
+			Timeout:   cfg.PokeAPI.Timeout,
+			Transport: otelhttp.NewTransport(http.DefaultTransport),
+		},
 		cfg.PokeAPI.BaseURL,
 	)
 	if err != nil {
@@ -116,6 +126,7 @@ func runServer(cfg *config.Config) error {
 		vital.WithIdleTimeout(serverIdleTimeout),
 		vital.WithShutdownTimeout(shutdownTimeout),
 		vital.WithLogger(logger),
+		vital.WithShutdownFunc(tracing.Shutdown),
 	)
 
 	err = server.Run()
@@ -133,6 +144,7 @@ func setupRouter(
 ) chi.Router {
 	router := chi.NewRouter()
 	router.Use(vital.Recovery(logger))
+	router.Use(otelhttp.NewMiddleware(build.ServiceName))
 	router.Use(vital.RequestLogger(logger))
 
 	handler := referencehttp.NewHandler(pokemonService, catchService)
