@@ -56,7 +56,7 @@ clean: ## Remove build artifacts
 	go clean
 
 docker-build: ## Build the Docker image
-	docker build --build-arg VERSION=$(VERSION) -t $(APP_NAME):latest .
+	docker build --build-arg VERSION=$(VERSION) -t $(APP_NAME):$(VERSION) .
 
 helm-lint: ## Lint the Helm chart
 	helm lint $(CHART_PATH)
