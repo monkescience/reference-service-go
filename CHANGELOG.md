@@ -1,5 +1,20 @@
 # Changelog
 
+## [v0.9.0](https://github.com/monkescience/reference-service-go/compare/v0.8.2...v0.9.0) (2026-05-01)
+
+### ⚠ BREAKING CHANGES
+
+- switch to hexagonal layout under internal/core ([4f47ae2](https://github.com/monkescience/reference-service-go/commit/4f47ae2e64495864d8477983f030f50cce2aa738))
+### Features
+
+- **observability:** wire opentelemetry tracing ([d498519](https://github.com/monkescience/reference-service-go/commit/d498519923de6f6898764c3db5a7ae4d52533fc7))
+### Bug Fixes
+
+- **deps:** update testcontainers-go monorepo to v0.42.0 (#95) ([7446531](https://github.com/monkescience/reference-service-go/commit/744653138cde4e68f558152662fa7ea4d2876fb4))
+- **deps:** update module github.com/monkescience/testastic to v0.3.0 (#98) ([adb9e51](https://github.com/monkescience/reference-service-go/commit/adb9e51b47bb28705a6f4aef14ccbe1daef9afd9))
+- **deps:** update module go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp to v0.68.0 (#94) ([19d74a7](https://github.com/monkescience/reference-service-go/commit/19d74a7fd05cf49139ac5321a62586c51317ae17))
+- **deps:** update module github.com/jackc/pgx/v5 to v5.9.2 [security] (#92) ([340c1b0](https://github.com/monkescience/reference-service-go/commit/340c1b0c1cb468f030d7eeb3aa05f0badf68cacb))
+
 ## [v0.8.2](https://github.com/monkescience/reference-service-go/compare/v0.8.1...v0.8.2) (2026-04-10)
 
 ### Features
