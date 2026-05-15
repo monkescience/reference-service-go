@@ -187,6 +187,8 @@ github.com/monkescience/testastic v0.2.0 h1:JmXtU/aF3iTWrkiuULvYRLppxcMcFiylTzwA
 github.com/monkescience/testastic v0.2.0/go.mod h1:apmUQdDbar6r2ZdIX0Ta21qL45nk5pOWDzwvXhhILGc=
 github.com/monkescience/testastic v0.3.0 h1:8VuPlLOmJcs0xvWr2x4pDE0+8gyQtmgq9O7Pg0CB1xM=
 github.com/monkescience/testastic v0.3.0/go.mod h1:DE/kntL0anaRYK71c4PmRGUOvU1VaQgDNyo7B5MW82c=
+github.com/monkescience/testastic v0.3.4 h1:JEULMzFdRQw+SXSSvzxGcbP9hJj4jKtEllpl/k7vPx4=
+github.com/monkescience/testastic v0.3.4/go.mod h1:DE/kntL0anaRYK71c4PmRGUOvU1VaQgDNyo7B5MW82c=
 github.com/monkescience/vital v0.4.0 h1:0f/o3iUXw9qzC6zzF2LTnFz5bGAWasoeQT+UY6WI4Fw=
 github.com/monkescience/vital v0.4.0/go.mod h1:FYtziQMXIGdTtZiOBTGlU9GXG84KpLvFge+pfDyyld8=
 github.com/monkescience/vital v0.5.0 h1:OyBxjzO05eNc+8HZnWUvidpcouE4AqWtr5ufnVc5l4w=
