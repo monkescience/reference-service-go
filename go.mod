@@ -4,7 +4,7 @@ go 1.26.1
 
 require (
 	github.com/exaring/otelpgx v0.10.0
-	github.com/getkin/kin-openapi v0.137.0
+	github.com/getkin/kin-openapi v0.138.0
 	github.com/go-chi/chi/v5 v5.2.5
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.9.2
