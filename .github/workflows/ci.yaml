@@ -12,7 +12,7 @@ permissions:
   checks: write
 
 env:
-  GOLANGCI_LINT_VERSION: v2.11.4 # renovate: datasource=github-releases depName=golangci/golangci-lint
+  GOLANGCI_LINT_VERSION: v2.12.2 # renovate: datasource=github-releases depName=golangci/golangci-lint
   HELM_VERSION: v4.1.4 # renovate: datasource=github-releases depName=helm/helm
 
 jobs:
