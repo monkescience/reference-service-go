@@ -210,6 +210,8 @@ github.com/monkescience/vital v0.4.0 h1:0f/o3iUXw9qzC6zzF2LTnFz5bGAWasoeQT+UY6WI
 github.com/monkescience/vital v0.4.0/go.mod h1:FYtziQMXIGdTtZiOBTGlU9GXG84KpLvFge+pfDyyld8=
 github.com/monkescience/vital v0.5.0 h1:OyBxjzO05eNc+8HZnWUvidpcouE4AqWtr5ufnVc5l4w=
 github.com/monkescience/vital v0.5.0/go.mod h1:FYtziQMXIGdTtZiOBTGlU9GXG84KpLvFge+pfDyyld8=
+github.com/monkescience/vital v0.6.0 h1:uNplT/3ZvdvpBMXii379dze/D0Jt1Kqe6JPirFWze1s=
+github.com/monkescience/vital v0.6.0/go.mod h1:JcgXzfuuwTlYeEE5onFlX4vvE2CqQ9egVIZK2tfo82c=
 github.com/morikuni/aec v1.0.0 h1:nP9CBfwrvYnBRgY6qfDQkygYDmYwOilePFkwzv4dU8A=
 github.com/morikuni/aec v1.0.0/go.mod h1:BbKIizmSmc5MMPqRYbxO4ZU0S0+P200+tUnFx7PXmsc=
 github.com/ncruces/go-strftime v1.0.0 h1:HMFp8mLCTPp341M/ZnA4qaf7ZlsbTc+miZjCLOFAw7w=
