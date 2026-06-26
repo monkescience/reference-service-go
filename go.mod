@@ -11,7 +11,7 @@ require (
 	github.com/monkescience/testastic v0.3.5
 	github.com/monkescience/vital v0.6.0
 	github.com/oapi-codegen/oapi-codegen/v2 v2.7.1
-	github.com/oapi-codegen/runtime v1.4.1
+	github.com/oapi-codegen/runtime v1.4.2
 	github.com/pressly/goose/v3 v3.27.1
 	github.com/sqlc-dev/sqlc v1.31.1
 	github.com/testcontainers/testcontainers-go v0.42.0
