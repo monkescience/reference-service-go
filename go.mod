@@ -9,7 +9,7 @@ require (
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx/v5 v5.10.0
 	github.com/monkescience/testastic v0.4.1
-	github.com/monkescience/vital v0.6.0
+	github.com/monkescience/vital v0.7.0
 	github.com/oapi-codegen/oapi-codegen/v2 v2.8.0
 	github.com/oapi-codegen/runtime v1.4.2
 	github.com/pressly/goose/v3 v3.27.3
