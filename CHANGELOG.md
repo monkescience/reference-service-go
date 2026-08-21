@@ -1,5 +1,53 @@
 # Changelog
 
+## [v0.9.0](https://github.com/monkescience/reference-service-go/compare/v0.8.2...v0.9.0) (2026-08-21)
+
+### ⚠ BREAKING CHANGES
+
+- switch to hexagonal layout under internal/core ([4f47ae2](https://github.com/monkescience/reference-service-go/commit/4f47ae2e64495864d8477983f030f50cce2aa738))
+### Features
+
+- **observability:** wire opentelemetry tracing ([d498519](https://github.com/monkescience/reference-service-go/commit/d498519923de6f6898764c3db5a7ae4d52533fc7))
+### Bug Fixes
+
+- **deps:** update module github.com/monkescience/vital to v0.7.0 (#162) ([ac4fa45](https://github.com/monkescience/reference-service-go/commit/ac4fa4514928138f696f8a3e356efa0fe8ccb7c1))
+- **deps:** update module github.com/getkin/kin-openapi to v0.146.0 (#159) ([1e9f0b5](https://github.com/monkescience/reference-service-go/commit/1e9f0b5d0434c247f877bb1fe3bb695d9784df68))
+- **deps:** update module github.com/pressly/goose/v3 to v3.27.3 (#155) ([d41939b](https://github.com/monkescience/reference-service-go/commit/d41939ba82b5a22290da204e723dd45d8050c579))
+- **deps:** update module github.com/getkin/kin-openapi to v0.145.0 (#157) ([b972ba2](https://github.com/monkescience/reference-service-go/commit/b972ba2172c57aea8b70346a22048f67928087f2))
+- **deps:** update module github.com/monkescience/testastic to v0.4.1 (#153) ([41abfb7](https://github.com/monkescience/reference-service-go/commit/41abfb788d60165d79470add7aca59bf228903ba))
+- **deps:** update module github.com/getkin/kin-openapi to v0.144.0 [security] (#150) ([a703773](https://github.com/monkescience/reference-service-go/commit/a70377335b656c5cc9b779f5fb8f76552a640175))
+- **deps:** update module github.com/oapi-codegen/oapi-codegen/v2 to v2.8.0 (#149) ([1e90119](https://github.com/monkescience/reference-service-go/commit/1e90119b875b0ba63640ebf933f3fbab39a1cecc))
+- **deps:** update module github.com/getkin/kin-openapi to v0.142.0 (#148) ([a18028d](https://github.com/monkescience/reference-service-go/commit/a18028d3b3b30d15f971ec93f5bba0a3997aaf20))
+- **deps:** update module github.com/oapi-codegen/oapi-codegen/v2 to v2.7.2 (#145) ([9ea651f](https://github.com/monkescience/reference-service-go/commit/9ea651f54a40bd87e6e4365855eb3b47b24c5209))
+- **deps:** update module github.com/go-chi/chi/v5 to v5.3.1 (#144) ([6a03695](https://github.com/monkescience/reference-service-go/commit/6a036958cfc67ab444d90689eebdd31a4d5b5a45))
+- **deps:** update module github.com/monkescience/testastic to v0.4.0 (#138) ([d2bf125](https://github.com/monkescience/reference-service-go/commit/d2bf12581d32239d6504e58c6c4d903f0b89cf42))
+- **deps:** update module github.com/pressly/goose/v3 to v3.27.2 (#141) ([d689efd](https://github.com/monkescience/reference-service-go/commit/d689efd9ea39078ada4f383b6641f35ee1f4ad6c))
+- **deps:** update module github.com/jackc/pgx/v5 to v5.10.0 (#137) ([0e9e4eb](https://github.com/monkescience/reference-service-go/commit/0e9e4ebc6ba17b9a157d71d6f37c0b06ca4207c8))
+- **deps:** update module go.yaml.in/yaml/v4 to v4.0.0-rc.6 (#134) ([aa74cff](https://github.com/monkescience/reference-service-go/commit/aa74cff82ba7ded7409f5e4da2d5a43db2bd3063))
+- **deps:** update module github.com/oapi-codegen/runtime to v1.4.2 (#133) ([0463291](https://github.com/monkescience/reference-service-go/commit/04632919d85df92494b01a087c37c0dfc64452c5))
+- **deps:** update opentelemetry-go-contrib monorepo to v0.69.0 (#125) ([f0be9dc](https://github.com/monkescience/reference-service-go/commit/f0be9dc80d3346f1319894107149e4d4f70ee08d))
+- **deps:** update module github.com/go-chi/chi/v5 to v5.3.0 (#123) ([0beeed3](https://github.com/monkescience/reference-service-go/commit/0beeed35fcb757cd2b984d1a94cbad4da449aa55))
+- **deps:** update module go.yaml.in/yaml/v4 to v4.0.0-rc.5 (#130) ([326c6e8](https://github.com/monkescience/reference-service-go/commit/326c6e8f176b0b6b484e9c3dfe8b7420a5f9f620))
+- **deps:** update opentelemetry-go monorepo to v1.44.0 (#124) ([57913e5](https://github.com/monkescience/reference-service-go/commit/57913e545f6ab70af35d41636b652019b6fc6479))
+- **deps:** update module github.com/getkin/kin-openapi to v0.140.0 (#127) ([7326514](https://github.com/monkescience/reference-service-go/commit/732651459ba4cbaa1969ea24239c7e2213abb106))
+- **deps:** update module github.com/oapi-codegen/oapi-codegen/v2 to v2.7.1 (#126) ([d2d3ae1](https://github.com/monkescience/reference-service-go/commit/d2d3ae180e4df55985d440ea42cba1743ae82784))
+- **deps:** update module github.com/getkin/kin-openapi to v0.139.0 (#120) ([391db9b](https://github.com/monkescience/reference-service-go/commit/391db9b9d131731a8a7514de582d369aeadf201a))
+- **deps:** update module github.com/monkescience/vital to v0.6.0 (#114) ([905f17c](https://github.com/monkescience/reference-service-go/commit/905f17c8ad0d062258ecd2fa6feb1303109138db))
+- **deps:** update module github.com/exaring/otelpgx to v0.11.1 (#119) ([3c02b9f](https://github.com/monkescience/reference-service-go/commit/3c02b9f1c21f0c59e08b44f20543727321838729))
+- **deps:** update module github.com/oapi-codegen/runtime to v1.4.1 (#118) ([4870fd9](https://github.com/monkescience/reference-service-go/commit/4870fd9da887e5f98f7e50620f0b1cc6436e5726))
+- **deps:** update module github.com/oapi-codegen/oapi-codegen/v2 to v2.7.0 (#106) ([2d8ad0c](https://github.com/monkescience/reference-service-go/commit/2d8ad0c7c11e5694a59c9c334aa1407fde0a815b))
+- **deps:** update module github.com/getkin/kin-openapi to v0.138.0 (#113) ([8a8fa90](https://github.com/monkescience/reference-service-go/commit/8a8fa900e0e2a842d5948052fc9351f6c6bf37f8))
+- **deps:** update module github.com/monkescience/testastic to v0.3.5 (#110) ([4e0b4ec](https://github.com/monkescience/reference-service-go/commit/4e0b4ecd340a7762c4e52ceaff9817525fdb8081))
+- **deps:** update module github.com/getkin/kin-openapi to v0.137.0 (#86) ([a2cf81f](https://github.com/monkescience/reference-service-go/commit/a2cf81f16fe7ca66586d2343dfd4e72c8657cc81))
+- **deps:** update module github.com/pressly/goose/v3 to v3.27.1 (#105) ([8c2c725](https://github.com/monkescience/reference-service-go/commit/8c2c725cf14e6afc6d4f15b1526704da59997c3a))
+- **deps:** update module github.com/monkescience/testastic to v0.3.4 (#104) ([6f95b89](https://github.com/monkescience/reference-service-go/commit/6f95b8909d94f8d9792fe5ab6738a68c4a9617d4))
+- **deps:** update module github.com/sqlc-dev/sqlc to v1.31.1 (#101) ([1d9045b](https://github.com/monkescience/reference-service-go/commit/1d9045befed59af5b9763465defc4e1bd9117308))
+- **deps:** update module github.com/monkescience/vital to v0.5.0 (#100) ([fc51fe0](https://github.com/monkescience/reference-service-go/commit/fc51fe04d6900e3e8db20fc8814ef3e14e68a932))
+- **deps:** update testcontainers-go monorepo to v0.42.0 (#95) ([7446531](https://github.com/monkescience/reference-service-go/commit/744653138cde4e68f558152662fa7ea4d2876fb4))
+- **deps:** update module github.com/monkescience/testastic to v0.3.0 (#98) ([adb9e51](https://github.com/monkescience/reference-service-go/commit/adb9e51b47bb28705a6f4aef14ccbe1daef9afd9))
+- **deps:** update module go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp to v0.68.0 (#94) ([19d74a7](https://github.com/monkescience/reference-service-go/commit/19d74a7fd05cf49139ac5321a62586c51317ae17))
+- **deps:** update module github.com/jackc/pgx/v5 to v5.9.2 [security] (#92) ([340c1b0](https://github.com/monkescience/reference-service-go/commit/340c1b0c1cb468f030d7eeb3aa05f0badf68cacb))
+
 ## [v0.8.2](https://github.com/monkescience/reference-service-go/compare/v0.8.1...v0.8.2) (2026-04-10)
 
 ### Features
