@@ -7,7 +7,7 @@ require (
 	github.com/getkin/kin-openapi v0.153.0
 	github.com/go-chi/chi/v5 v5.5.0
 	github.com/google/uuid v1.6.0
-	github.com/jackc/pgx/v5 v5.12.0
+	github.com/jackc/pgx/v5 v5.13.0
 	github.com/monkescience/testastic v0.4.7
 	github.com/monkescience/vital v0.7.3
 	github.com/oapi-codegen/oapi-codegen/v2 v2.8.2
